@@ -1,0 +1,8 @@
+{
+  "created_at": "2026-06-26T05:46:57+08:00",
+  "candidate_id": "unlabeled_selective_neighbor_gate_v1",
+  "run": "runs/pb25d_improvement_unlabeled_selective_neighbor_gate_v1_seed1337_20260626_055500",
+  "audit": "audit/pb25d_improvement_unlabeled_selective_neighbor_gate_v1_20260626_055500",
+  "source_reflow": "audit/pb25d_confidence_pseudopath_reflow_20260626_055000",
+  "parent_work": "runs/pb25d_improvement_selective_neighbor_gate_v1_repair1_seed1337_20260626_004500/work"
+}

@@ -1,0 +1,38 @@
+dataset: PROMISE12_PB
+candidate_id: prediction_disagreement_boundary_volume_stabilized_v3
+control_id: PB2D_FROZEN_SEED1337
+parent_candidate_id: prediction_disagreement_neighbor_regularization_v2
+primary_endpoint: VAL_VOL_DSC
+secondary_endpoints:
+- ASD_px
+- HD95_px
+- per_case_DSC
+- boundary/core/farFP/FN audit
+primary_distribution_unit: per-volume case
+critical_safety_units:
+- Case37 risk sentinel
+- Case35/36 retained gain cases
+- Case38/39 near-miss safety cases
+harm_margins:
+  per_case_DSC_delta_vs_PB2D: -0.001185
+  Case37_min_DSC: 0.877841
+positive_coverage_target: at least 4 of 5 validation cases positive vs PB2D
+critical_positive_coverage_target: Case37 must satisfy safety floor; Case35/36 gains
+  must not be erased
+maximum_negative_count: 1
+leave_one_unit_out_rule: global delta vs PB2D must remain positive after removing
+  any case
+gain_concentration_rule: no one/two-case dominance; top positive cases may not mask
+  multiple negative cases
+ASD_safety_rule: no systematic ASD_px harm vs PB2D/formal controls
+HD95_safety_rule: no systematic HD95_px harm vs PB2D/formal controls
+rollback_rule: rollback on any case below harm margin, Case37 floor fail, default-off
+  mismatch, no-op/saturated endpoint, protocol drift, or test access
+transfer_eligibility_rule: ACDC bridge only after PB25D_CASE_SAFE_BALANCED_DISTRIBUTED_PRELIMINARY_KEEP
+  or all-cases-positive keep
+freeze_timestamp: '20260626_211909'
+evidence_source:
+- v2 balanced gain audit
+- v2 risk sentinel audit
+- v2 benefit-harm map
+- vNext discovery

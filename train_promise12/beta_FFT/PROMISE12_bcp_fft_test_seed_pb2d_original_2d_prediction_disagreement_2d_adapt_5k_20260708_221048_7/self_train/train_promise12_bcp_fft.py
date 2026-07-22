@@ -1,0 +1,881 @@
+import argparse
+import logging
+import os
+import random
+import shutil
+import sys
+import time
+import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
+import torch.optim as optim
+import torch, gc
+from medpy import metric
+from PIL import Image
+import matplotlib.pyplot as plt
+from tensorboardX import SummaryWriter
+from torch.nn.modules.loss import CrossEntropyLoss
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from dataloaders.dataset import (BaseDataSets, RandomGenerator, TwoStreamBatchSampler, WeakStrongAugment)
+from dataloaders.promise12 import Promise12
+from networks.net_factory import net_factory
+from networks.vision_transformer import SwinUnet as ViT_seg
+from networks.config import get_config
+from utils import losses, ramps
+from val_2D import test_single_volume_promise
+from utils.displacement import process_image_batches
+import torch.nn as nn
+import torch.nn.functional as F
+
+gc.collect()
+torch.cuda.empty_cache()
+parser = argparse.ArgumentParser()
+parser.add_argument('--root_path', type=str,
+                    default="../AD-MT/code/data_promise12", help='Name of Experiment')
+parser.add_argument('--exp', type=str,
+                    default='train_PROMISE12', help='experiment_name')
+parser.add_argument('--model_1', type=str,
+                    default='unet', help='model1_name')
+parser.add_argument('--model_2', type=str,
+                    default='swin_unet', help='model2_name')
+parser.add_argument('--max_iterations', type=int,
+                    default=30000, help='maximum epoch number to train')
+parser.add_argument('--batch_size', type=int, default=16,
+                    help='batch_size per gpu')
+parser.add_argument('--deterministic', type=int, default=1,
+                    help='whether use deterministic training')
+parser.add_argument('--base_lr', type=float, default=0.01,
+                    help='segmentation network learning rate')
+parser.add_argument('--image_size', type=list, default=[224, 224],
+                    help='patch size of network input')
+parser.add_argument('--seed', type=int, default=1337, help='random seed')
+parser.add_argument('--num_classes', type=int, default=2,
+                    help='output channel of network')
+parser.add_argument('--cfg', type=str,
+                    default="./configs/swin_tiny_patch4_window7_224_lite.yaml",
+                    help='path to config file', )
+parser.add_argument("--opts", help="Modify config options by adding 'KEY VALUE' pairs. ",
+                    default=None, nargs='+', )
+parser.add_argument('--zip', action='store_true',
+                    help='use zipped dataset instead of folder dataset')
+parser.add_argument('--cache-mode', type=str, default='part', choices=['no', 'full', 'part'],
+                    help='no: no cache, ''full: cache all data, ''part: sharding the dataset into nonoverlapping pieces and only cache one piece')
+parser.add_argument('--resume', help='resume from checkpoint')
+parser.add_argument('--accumulation-steps', type=int,
+                    help="gradient accumulation steps")
+parser.add_argument('--use-checkpoint', action='store_true',
+                    help="whether to use gradient checkpointing to save memory")
+parser.add_argument('--amp-opt-level', type=str, default='O1', choices=['O0', 'O1', 'O2'],
+                    help='mixed precision opt level, if O0, no amp is used')
+parser.add_argument('--tag', help='tag of experiment')
+parser.add_argument('--eval', action='store_true',
+                    help='Perform evaluation only')
+parser.add_argument('--throughput', action='store_true',
+                    help='Test throughput only')
+# label and unlabel
+parser.add_argument('--labeled_bs', type=int, default=8,
+                    help='labeled_batch_size per gpu')
+parser.add_argument('--labeled_num', type=int, default=7,
+                    help='labeled data')
+# costs
+parser.add_argument('--gpu', type=str,  default='5', help='GPU to use')
+parser.add_argument('--ema_decay', type=float, default=0.99, help='ema_decay')
+parser.add_argument('--consistency_type', type=str,
+                    default="mse", help='consistency_type')
+parser.add_argument('--consistency', type=float,
+                    default=0.1, help='consistency')
+parser.add_argument('--consistency_rampup', type=float,
+                    default=200.0, help='consistency_rampup')
+parser.add_argument('--u_weight', type=float, default=0.5, help='weight of unlabeled pixels')
+# patch size
+parser.add_argument('--patch_size', type=int, default=56, help='patch_size')
+parser.add_argument('--h_size', type=int, default=4, help='h_size')
+parser.add_argument('--w_size', type=int, default=4, help='w_size')
+# top num
+parser.add_argument('--top_num', type=int, default=4, help='top_num')
+parser.add_argument('--use_mask_token_prehead_router', action='store_true',
+                    help='enable decoder pre-head mask-token router')
+parser.add_argument('--mask_token_num', type=int, default=4,
+                    help='number of shared decoder pre-head mask tokens')
+parser.add_argument('--mask_token_dim', type=int, default=16,
+                    help='token projection dimension for decoder pre-head mask-token router')
+parser.add_argument('--mask_token_log_interval', type=int, default=200,
+                    help='iteration interval for mask-token router endpoint logging')
+parser.add_argument('--use_m3hl_mmm_lite', action='store_true',
+                    help='enable M3HL-inspired mutual multi-mask mix consistency')
+parser.add_argument('--m3hl_mmm_weight', type=float, default=0.05,
+                    help='weight for M3HL-MMM-Lite auxiliary consistency')
+parser.add_argument('--m3hl_mmm_mask_ratio', type=float, default=0.50,
+                    help='expected spatial mask ratio for M3HL-MMM-Lite')
+parser.add_argument('--m3hl_mmm_patch_size', type=int, default=56,
+                    help='block size for M3HL-MMM-Lite mask generation')
+parser.add_argument('--m3hl_mmm_log_interval', type=int, default=200,
+                    help='iteration interval for M3HL-MMM-Lite endpoint logging')
+parser.add_argument('--use_dpl_msp_logit_lite', action='store_true',
+                    help='enable DPL-MSP-inspired logit prototype consistency lite')
+parser.add_argument('--dpl_msp_logit_lite_weight', type=float, default=0.01,
+                    help='weight for DPL-MSP logit prototype lite auxiliary loss')
+parser.add_argument('--dpl_msp_log_interval', type=int, default=200,
+                    help='iteration interval for DPL-MSP logit prototype endpoint logging')
+parser.add_argument('--use_prediction_disagreement_2d_adapt', action='store_true',
+                    help='enable 2D peer prediction-disagreement consistency on high-disagreement unlabeled pixels')
+parser.add_argument('--prediction_disagreement_2d_weight', type=float, default=0.05,
+                    help='weight for 2D prediction disagreement auxiliary loss')
+parser.add_argument('--prediction_disagreement_2d_top_quantile', type=float, default=0.50,
+                    help='batch quantile threshold for high-disagreement pixel selection')
+parser.add_argument('--prediction_disagreement_2d_log_interval', type=int, default=200,
+                    help='iteration interval for 2D prediction disagreement endpoint logging')
+parser.add_argument('--pretrain_max_iterations_override', type=int, default=None,
+                    help='engineering smoke/short override for pre-train iterations; default preserves original 10000')
+parser.add_argument('--self_train_max_iterations_override', type=int, default=None,
+                    help='engineering smoke/short override for self-train iterations; default uses max_iterations')
+args = parser.parse_args()
+config = get_config(args)
+dice_loss = losses.DiceLoss(2)
+
+def log_mask_token_router_stats(model, model_name, iter_num):
+    decoder = getattr(model, "decoder", None)
+    router = getattr(decoder, "mask_token_router", None)
+    if router is None:
+        logging.info(
+            "iteration %d : %s_mask_token_prehead_router_enabled : False" %
+            (iter_num, model_name)
+        )
+        return
+    stats = getattr(router, "last_stats", {}) or {}
+    logging.info(
+        "iteration %d : %s_mask_token_prehead_router_enabled : True, "
+        "token_utilization : %s, routing_entropy : %s, activation_coverage : %s, "
+        "gamma : %s, residual_to_feature_ratio : %s, finite : %s" %
+        (
+            iter_num,
+            model_name,
+            stats.get("token_utilization", "NA"),
+            stats.get("routing_entropy", "NA"),
+            stats.get("activation_coverage", "NA"),
+            stats.get("gamma", "NA"),
+            stats.get("residual_to_feature_ratio", "NA"),
+            stats.get("finite", "NA"),
+        )
+    )
+
+def get_current_consistency_weight(epoch):
+    # Consistency ramp-up from https://arxiv.org/abs/1610.02242
+    return args.consistency * ramps.sigmoid_rampup(epoch,args.consistency_rampup)  # args.consistency=0.1 # args.consistency_rampup=200
+def update_model_ema(model, ema_model, alpha):
+    model_state = model.state_dict()
+    model_ema_state = ema_model.state_dict()
+    new_dict = {}
+    for key in model_state:
+        new_dict[key] = alpha * model_ema_state[key] + (1 - alpha) * model_state[key]
+    ema_model.load_state_dict(new_dict)
+def update_ema_variables(model, ema_model, alpha, global_step):
+    # Use the true average until the exponential average is more correct
+    alpha = min(1 - 1 / (global_step + 1), alpha)
+    for ema_param, param in zip(ema_model.parameters(), model.parameters()):
+        ema_param.data.mul_(alpha).add_(1 - alpha, param.data)
+
+def calculate_metric_percase(pred, gt):
+    pred[pred > 0] = 1
+    gt[gt > 0] = 1
+    dice = metric.binary.dc(pred, gt)
+    return dice
+
+def generate_mask(img):
+    batch_size, channel, img_x, img_y = img.shape[0], img.shape[1], img.shape[2], img.shape[3]
+    loss_mask = torch.ones(batch_size, img_x, img_y).cuda()
+    mask = torch.ones(img_x, img_y).cuda()
+    patch_x, patch_y = int(img_x*1/4), int(img_y*1/4)
+    w = np.random.randint(0, img_x - patch_x)
+    h = np.random.randint(0, img_y - patch_y)
+    mask[w:w+patch_x, h:h+patch_y] = 0
+    # 相当于           11111       这样生成模拟遮盖或缺失区域
+    #                 11111
+    #                 00000
+    loss_mask[:, w:w+patch_x, h:h+patch_y] = 0
+    return mask.long(), loss_mask.long()
+
+def mix_loss(output, img_l, patch_l, mask, l_weight=1.0, u_weight=0.5, unlab=False):
+    # 交叉熵损失初始化
+    CE = nn.CrossEntropyLoss(reduction='none')
+    # 将 img_l 和 patch_l 转换为 torch.int64 类型：
+    img_l, patch_l = img_l.type(torch.int64), patch_l.type(torch.int64)
+    # 对 output 进行 softmax 以得到每个类别的概率
+    output_soft = F.softmax(output, dim=1)
+    image_weight, patch_weight = l_weight, u_weight
+    # 是否使用权重
+    if unlab:
+        image_weight, patch_weight = u_weight, l_weight
+    # 通过取反得到补丁掩码：
+    patch_mask = 1 - mask
+    # 对图像和补丁分别计算 Dice 损失，并乘以相应权重：
+    loss_dice = dice_loss(output_soft, img_l.unsqueeze(1), mask.unsqueeze(1)) * image_weight
+    loss_dice += dice_loss(output_soft, patch_l.unsqueeze(1), patch_mask.unsqueeze(1)) * patch_weight
+    loss_ce = image_weight * (CE(output, img_l) * mask).sum() / (mask.sum() + 1e-16)
+    loss_ce += patch_weight * (CE(output, patch_l) * patch_mask).sum() / (patch_mask.sum() + 1e-16)#loss = loss_ce
+    return loss_dice, loss_ce
+
+def generate_m3hl_mmm_mask(img, mask_ratio=0.5, patch_size=56):
+    batch_size, _, img_x, img_y = img.shape
+    grid_x = max(1, int(np.ceil(float(img_x) / float(patch_size))))
+    grid_y = max(1, int(np.ceil(float(img_y) / float(patch_size))))
+    low_res = (torch.rand(batch_size, 1, grid_x, grid_y, device=img.device) < mask_ratio).float()
+    return F.interpolate(low_res, size=(img_x, img_y), mode='nearest')
+
+def m3hl_mmm_lite_consistency(model, img_a, img_b, logits_a, logits_b, mask_ratio, patch_size):
+    mask = generate_m3hl_mmm_mask(img_a, mask_ratio=mask_ratio, patch_size=patch_size)
+    mixed = img_a * mask + img_b * (1.0 - mask)
+    with torch.no_grad():
+        soft_a = torch.softmax(logits_a, dim=1)
+        soft_b = torch.softmax(logits_b, dim=1)
+        target = soft_a * mask + soft_b * (1.0 - mask)
+    pred = torch.softmax(model(mixed), dim=1)
+    loss = F.mse_loss(pred, target.detach())
+    finite = bool(torch.isfinite(loss).detach().cpu().item())
+    return loss, mask.mean().detach(), finite
+
+def _weighted_logit_prototype(logits, weights):
+    weights = weights.float()
+    denom = weights.sum(dim=(0, 2, 3)).clamp_min(1e-6)
+    return (logits * weights).sum(dim=(0, 2, 3)) / denom
+
+def _prototype_pair_loss(proto_a, proto_b):
+    return 1.0 - F.cosine_similarity(proto_a.unsqueeze(0), proto_b.unsqueeze(0), dim=1).mean()
+
+def _class_weight_from_labels_or_probs(labels, probs, class_id):
+    gt_weight = (labels == class_id).float().unsqueeze(1)
+    if gt_weight.sum().detach().item() > 1.0:
+        return gt_weight
+    return probs[:, class_id:class_id + 1].detach()
+
+def _soft_class_weight(probs, class_id):
+    return probs[:, class_id:class_id + 1].detach()
+
+def dpl_msp_logit_lite_loss(out_1, out_2, fft_out_1, fft_out_2, ict_outputs, labels, labeled_bs):
+    prob_1 = torch.softmax(out_1, dim=1)
+    prob_2 = torch.softmax(out_2, dim=1)
+    fft_prob_1 = torch.softmax(fft_out_1, dim=1)
+    fft_prob_2 = torch.softmax(fft_out_2, dim=1)
+    ict_prob = torch.softmax(ict_outputs[:labeled_bs], dim=1)
+    ict_logits = ict_outputs[:labeled_bs]
+    labeled_gt = labels[:labeled_bs]
+
+    branch_losses = []
+    fft_losses = []
+    anchor_losses = []
+    sep_losses = []
+    stats = {}
+    for class_id in range(args.num_classes):
+        branch_proto_1 = _weighted_logit_prototype(out_1, _soft_class_weight(prob_1, class_id))
+        branch_proto_2 = _weighted_logit_prototype(out_2, _soft_class_weight(prob_2, class_id))
+        fft_proto_1 = _weighted_logit_prototype(fft_out_1, _soft_class_weight(fft_prob_1, class_id))
+        fft_proto_2 = _weighted_logit_prototype(fft_out_2, _soft_class_weight(fft_prob_2, class_id))
+        anchor_weight = _class_weight_from_labels_or_probs(labeled_gt, ict_prob, class_id)
+        anchor_proto = _weighted_logit_prototype(ict_logits, anchor_weight)
+
+        branch_losses.append(_prototype_pair_loss(branch_proto_1, branch_proto_2))
+        fft_losses.append(_prototype_pair_loss(fft_proto_1, fft_proto_2))
+        anchor_losses.extend([
+            _prototype_pair_loss(branch_proto_1, anchor_proto),
+            _prototype_pair_loss(branch_proto_2, anchor_proto),
+            _prototype_pair_loss(fft_proto_1, anchor_proto),
+            _prototype_pair_loss(fft_proto_2, anchor_proto),
+        ])
+
+        stats["class_%d_branch_proto_norm_model1" % class_id] = float(branch_proto_1.norm().detach().cpu())
+        stats["class_%d_branch_proto_norm_model2" % class_id] = float(branch_proto_2.norm().detach().cpu())
+        stats["class_%d_fft_proto_norm_model1" % class_id] = float(fft_proto_1.norm().detach().cpu())
+        stats["class_%d_fft_proto_norm_model2" % class_id] = float(fft_proto_2.norm().detach().cpu())
+        stats["class_%d_anchor_proto_norm" % class_id] = float(anchor_proto.norm().detach().cpu())
+
+    if args.num_classes >= 2:
+        p0_1 = _weighted_logit_prototype(out_1, _soft_class_weight(prob_1, 0))
+        p1_1 = _weighted_logit_prototype(out_1, _soft_class_weight(prob_1, 1))
+        p0_2 = _weighted_logit_prototype(out_2, _soft_class_weight(prob_2, 0))
+        p1_2 = _weighted_logit_prototype(out_2, _soft_class_weight(prob_2, 1))
+        sep_losses.append(F.relu(F.cosine_similarity(p0_1.unsqueeze(0), p1_1.unsqueeze(0), dim=1).mean() - 0.1))
+        sep_losses.append(F.relu(F.cosine_similarity(p0_2.unsqueeze(0), p1_2.unsqueeze(0), dim=1).mean() - 0.1))
+
+    branch_loss = torch.stack(branch_losses).mean()
+    fft_loss = torch.stack(fft_losses).mean()
+    anchor_loss = torch.stack(anchor_losses).mean()
+    sep_loss = torch.stack(sep_losses).mean() if sep_losses else out_1.new_tensor(0.0)
+    loss = branch_loss + fft_loss + 0.5 * anchor_loss + 0.1 * sep_loss
+    with torch.no_grad():
+        stats.update({
+            "branch_proto_loss": float(branch_loss.detach().cpu()),
+            "fft_proto_loss": float(fft_loss.detach().cpu()),
+            "anchor_proto_loss": float(anchor_loss.detach().cpu()),
+            "class_sep_loss": float(sep_loss.detach().cpu()),
+            "finite": bool(torch.isfinite(loss).all().detach().cpu()),
+        })
+    return loss, stats
+
+def log_dpl_msp_logit_lite_stats(iter_num, loss_value, stats):
+    logging.info(
+        "iteration %d : dpl_msp_logit_lite_enabled : True, "
+        "dpl_msp_logit_lite_loss : %s, branch_proto_loss : %s, "
+        "fft_proto_loss : %s, anchor_proto_loss : %s, class_sep_loss : %s, "
+        "fg_branch_proto_norm_model1 : %s, fg_branch_proto_norm_model2 : %s, "
+        "fg_fft_proto_norm_model1 : %s, fg_fft_proto_norm_model2 : %s, "
+        "fg_anchor_proto_norm : %s, finite : %s" %
+        (
+            iter_num,
+            loss_value,
+            stats.get("branch_proto_loss", "NA"),
+            stats.get("fft_proto_loss", "NA"),
+            stats.get("anchor_proto_loss", "NA"),
+            stats.get("class_sep_loss", "NA"),
+            stats.get("class_1_branch_proto_norm_model1", "NA"),
+            stats.get("class_1_branch_proto_norm_model2", "NA"),
+            stats.get("class_1_fft_proto_norm_model1", "NA"),
+            stats.get("class_1_fft_proto_norm_model2", "NA"),
+            stats.get("class_1_anchor_proto_norm", "NA"),
+            stats.get("finite", "NA"),
+        )
+    )
+
+def prediction_disagreement_2d_adapt_loss(out_unl_1, out_unl_2, top_quantile):
+    prob_1 = torch.softmax(out_unl_1, dim=1)
+    prob_2 = torch.softmax(out_unl_2, dim=1)
+    disagreement = torch.mean(torch.abs(prob_1.detach() - prob_2.detach()), dim=1, keepdim=True)
+    flat = disagreement.reshape(disagreement.shape[0], -1)
+    quantile = min(max(float(top_quantile), 0.0), 0.99)
+    threshold = torch.quantile(flat, quantile, dim=1, keepdim=True).view(-1, 1, 1, 1)
+    mask = (disagreement >= threshold).float()
+    selected = mask.sum().clamp_min(1.0)
+    loss = (((prob_1 - prob_2.detach()) ** 2 + (prob_2 - prob_1.detach()) ** 2) * mask).sum() / selected
+    with torch.no_grad():
+        stats = {
+            "loss": float(loss.detach().cpu()),
+            "mask_ratio": float(mask.mean().detach().cpu()),
+            "mean_disagreement": float(disagreement.mean().detach().cpu()),
+            "threshold_mean": float(threshold.mean().detach().cpu()),
+            "finite": bool(torch.isfinite(loss).all().detach().cpu()),
+        }
+    return loss, stats
+
+def log_prediction_disagreement_2d_stats(iter_num, stats):
+    logging.info(
+        "iteration %d : prediction_disagreement_2d_adapt_enabled : True, "
+        "prediction_disagreement_2d_loss : %s, mask_ratio : %s, "
+        "mean_disagreement : %s, threshold_mean : %s, finite : %s" %
+        (
+            iter_num,
+            stats.get("loss", "NA"),
+            stats.get("mask_ratio", "NA"),
+            stats.get("mean_disagreement", "NA"),
+            stats.get("threshold_mean", "NA"),
+            stats.get("finite", "NA"),
+        )
+    )
+
+def load_net(net, path):
+    state = torch.load(str(path))
+    net.load_state_dict(state['net'])
+
+def load_net_opt(net, optimizer, path):
+    state = torch.load(str(path))
+    net.load_state_dict(state['net'])
+    optimizer.load_state_dict(state['opt'])
+
+def save_net_opt(net, optimizer, path):
+    state = {
+        'net': net.state_dict(),
+        'opt': optimizer.state_dict(),
+    }
+    torch.save(state, str(path))
+
+def pre_train(args, snapshot_path):
+    base_lr = args.base_lr
+    num_classes = args.num_classes
+    max_iterations = args.pretrain_max_iterations_override or 10000
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    labeled_sub_bs, unlabeled_sub_bs = int(args.labeled_bs / 2), int((args.batch_size - args.labeled_bs) / 2)
+    batch_size = args.batch_size
+
+    model = create_model()
+
+    def worker_init_fn(worker_id):
+        random.seed(args.seed + worker_id)
+
+    db_train = Promise12(args.root_path, mode='train', out_size=224)
+    db_val = Promise12(args.root_path, mode='val', out_size=224)
+    
+    total_slices = len(db_train)
+    labeled_slice = 202 # 标记的切片数目
+    print("Total slices is: {}, labeled slices is:{}".format(total_slices, labeled_slice))
+    labeled_idxs = list(range(0, labeled_slice))
+    unlabeled_idxs = list(range(labeled_slice, total_slices))
+    # batch_sampler = TwoStreamBatchSampler(labeled_idxs, unlabeled_idxs, args.batch_size,
+    #                                       args.batch_size - args.labeled_bs)
+    #
+    # trainloader = DataLoader(db_train, batch_sampler=batch_sampler, num_workers=4, pin_memory=True,
+    #                          worker_init_fn=worker_init_fn)
+    #
+    # valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
+
+    batch_sampler = TwoStreamBatchSampler(labeled_idxs, unlabeled_idxs, batch_size, batch_size - args.labeled_bs)  # args.labeled_bs=8
+    trainloader = DataLoader(db_train, batch_sampler=batch_sampler, num_workers=0, pin_memory=True, worker_init_fn=worker_init_fn)
+    valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=0)
+
+    optimizer = optim.SGD(model.parameters(), lr=base_lr, momentum=0.9, weight_decay=0.0001)
+
+    writer = SummaryWriter(snapshot_path + '/log')
+    logging.info("Start pre_training")
+    logging.info("{} iterations per epoch".format(len(trainloader)))
+
+    model.train()
+
+    iter_num = 0
+    max_epoch = max_iterations // len(trainloader) + 1
+    best_performance = 0.0
+    best_hd = 100
+    iterator = tqdm(range(max_epoch), ncols=70)
+
+
+
+    for _ in iterator:
+        for _, sampled_batch in enumerate(trainloader):
+            volume_batch, label_batch = sampled_batch['image'], sampled_batch['mask']
+            volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
+
+            img_a, img_b = volume_batch[:labeled_sub_bs], volume_batch[labeled_sub_bs:args.labeled_bs]
+            lab_a, lab_b = label_batch[:labeled_sub_bs], label_batch[labeled_sub_bs:args.labeled_bs]
+            img_mask, loss_mask = generate_mask(img_a)
+            # gt_mixl = lab_a * img_mask + lab_b * (1 - img_mask)
+
+            # -- original
+            net_input = img_a * img_mask + img_b * (1 - img_mask)
+            out_mixl = model(net_input)
+            loss_dice, loss_ce = mix_loss(out_mixl, lab_a, lab_b, loss_mask, u_weight=1.0, unlab=True)
+
+            loss = (loss_dice + loss_ce) / 2
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            iter_num += 1
+
+            writer.add_scalar('info/total_loss', loss, iter_num)
+            writer.add_scalar('info/mix_dice', loss_dice, iter_num)
+            writer.add_scalar('info/mix_ce', loss_ce, iter_num)
+
+            logging.info('iteration %d: loss: %f, mix_dice: %f, mix_ce: %f' % (iter_num, loss, loss_dice, loss_ce))
+            if args.use_mask_token_prehead_router and iter_num % args.mask_token_log_interval == 0:
+                log_mask_token_router_stats(model, "pretrain_model", iter_num)
+
+
+
+            if iter_num > 0 and iter_num % 200 == 0:
+                model.eval()
+                metric_list = 0.0
+                for i_batch, sampled_batch in enumerate(valloader):
+                    metric_i = test_single_volume_promise(sampled_batch["image"], sampled_batch["mask"], model,
+                                                          classes=num_classes)
+                    metric_list += np.array(metric_i)
+                metric_list = metric_list / len(db_val)
+
+
+
+                performance = np.mean(metric_list, axis=0)
+
+                if performance > best_performance:
+                    best_performance = performance
+                    save_mode_path = os.path.join(snapshot_path,
+                                                  'iter_{}_dice_{}.pth'.format(iter_num, round(best_performance, 4)))
+                    save_best_path = os.path.join(snapshot_path, '{}_best_model.pth'.format(args.model_1))
+                    save_net_opt(model, optimizer, save_mode_path)
+                    save_net_opt(model, optimizer, save_best_path)
+
+                logging.info('iteration %d : mean_dice : %f' % (iter_num, performance))
+                model.train()
+
+            if iter_num >= max_iterations:
+                break
+        if iter_num >= max_iterations:
+            iterator.close()
+            break
+    save_best_path = os.path.join(snapshot_path, '{}_best_model.pth'.format(args.model_1))
+    if not os.path.exists(save_best_path):
+        save_net_opt(model, optimizer, save_best_path)
+        logging.info('pretrain fallback saved final checkpoint for short/smoke: %s' % save_best_path)
+    writer.close()
+
+def create_model(ema=False):
+    # Network definition
+    model = net_factory(
+        net_type=args.model_1,
+        in_chns=1,
+        class_num=2,
+        use_mask_token_prehead_router=args.use_mask_token_prehead_router,
+        mask_token_num=args.mask_token_num,
+        mask_token_dim=args.mask_token_dim,
+    )
+    if ema:
+        for param in model.parameters():
+            param.detach_()
+    return model
+def self_train(args, pre_snapshot_path,snapshot_path):
+    base_lr = args.base_lr
+    num_classes = args.num_classes
+    batch_size = args.batch_size
+    labeled_sub_bs, unlabeled_sub_bs = int(args.labeled_bs / 2), int((args.batch_size - args.labeled_bs) / 2)
+    max_iterations = args.self_train_max_iterations_override or args.max_iterations
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    pre_trained_model = os.path.join(pre_snapshot_path, '{}_best_model.pth'.format(args.model_1))
+
+
+    model1 = create_model()
+    model2 = create_model()
+    ema_model = create_model()
+
+    # model2 = ViT_seg(config, img_size=args.image_size, num_classes=args.num_classes).cuda()
+    # model2.load_from(config)
+
+
+    def worker_init_fn(worker_id):
+        random.seed(args.seed + worker_id)
+
+    db_train = Promise12(args.root_path, mode='train', out_size=224)
+    db_val = Promise12(args.root_path, mode='val', out_size=224)
+    db_test = Promise12(args.root_path, mode='test', out_size=224)
+
+    total_slices = len(db_train)
+    labeled_slice = 202  # args.labeled_num=7
+    print("Total silices is: {}, labeled slices is: {}".format(total_slices, labeled_slice))
+
+    labeled_idxs = list(range(0, labeled_slice))
+    unlabeled_idxs = list(range(labeled_slice, total_slices))
+    batch_sampler = TwoStreamBatchSampler(labeled_idxs, unlabeled_idxs, batch_size, batch_size - args.labeled_bs)  # args.labeled_bs=8
+    trainloader = DataLoader(db_train, batch_sampler=batch_sampler, num_workers=0, pin_memory=True, worker_init_fn=worker_init_fn)
+    loader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=0)
+    
+    
+    test_loader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=0)
+
+    model1.train()
+    model2.train()
+
+    optimizer1 = optim.SGD(model1.parameters(), lr=base_lr,momentum=0.9, weight_decay=0.0001)
+    optimizer2 = optim.SGD(model2.parameters(), lr=base_lr, momentum=0.9, weight_decay=0.0001)
+
+    ce_loss = CrossEntropyLoss()
+    dice_loss = losses.DiceLoss(num_classes)
+
+    load_net(ema_model, pre_trained_model)
+    load_net_opt(model1, optimizer1, pre_trained_model)
+    load_net_opt(model2, optimizer2, pre_trained_model)
+    logging.info("Loaded from {}".format(pre_trained_model))
+
+    writer = SummaryWriter(snapshot_path + '/log')
+    logging.info("{} iterations per epoch".format(len(trainloader)))
+
+    iter_num = 0
+    max_epoch = max_iterations // len(trainloader) + 1
+
+    best_performance1 = 0.0
+    best_performance2 = 0.0
+    iterator = tqdm(range(max_epoch), ncols=70)  #
+
+    for epoch_num in iterator:
+        for i_batch, sampled_batch in enumerate(trainloader):
+
+            volume_batch, label_batch = sampled_batch['image'], sampled_batch['mask']
+            volume_batch_strong, label_batch_strong = sampled_batch['image_strong'], sampled_batch['mask_strong']
+            volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
+            volume_batch_strong, label_batch_strong = volume_batch_strong.cuda(), label_batch_strong.cuda()
+            labeled_volume_batch = volume_batch[:args.labeled_bs]
+            # bcp
+            img_a, img_b = volume_batch[:labeled_sub_bs], volume_batch[labeled_sub_bs:args.labeled_bs]
+            # unlabeled_sub_bs = (batch_size - labeled_bs)/2
+            uimg_a, uimg_b = volume_batch[args.labeled_bs:args.labeled_bs + unlabeled_sub_bs], volume_batch[
+                                                                                               args.labeled_bs + unlabeled_sub_bs:]
+            lab_a, lab_b = label_batch[:labeled_sub_bs], label_batch[labeled_sub_bs:args.labeled_bs]
+
+            img_a_s, img_b_s = volume_batch_strong[:labeled_sub_bs], volume_batch_strong[labeled_sub_bs:args.labeled_bs]
+            uimg_a_s, uimg_b_s = volume_batch_strong[
+                                 args.labeled_bs:args.labeled_bs + unlabeled_sub_bs], volume_batch_strong[
+                                                                                      args.labeled_bs + unlabeled_sub_bs:]
+            lab_a_s, lab_b_s = label_batch_strong[:labeled_sub_bs], label_batch_strong[labeled_sub_bs:args.labeled_bs]
+
+            with torch.no_grad():
+                pre_a = ema_model(uimg_a)
+                pre_b = ema_model(uimg_b)
+                pre_a_s = ema_model(uimg_a_s)
+                pre_b_s = ema_model(uimg_b_s)
+                
+                plab_a = torch.argmax(pre_a, dim=1, keepdim=False)
+                plab_b = torch.argmax(pre_b, dim=1, keepdim=False)
+                plab_a_s = torch.argmax(pre_a_s, dim=1, keepdim=False)
+                plab_b_s = torch.argmax(pre_b_s, dim=1, keepdim=False)
+                
+                img_mask, loss_mask = generate_mask(img_a)
+
+
+            #
+            net_input_unl_1 = uimg_a * img_mask + img_a * (1 - img_mask)
+            net_input_l_1 = img_b * img_mask + uimg_b * (1 - img_mask)
+            net_input_1 = torch.cat([net_input_unl_1, net_input_l_1], dim=0) 
+
+            net_input_unl_2 = uimg_a_s * img_mask + img_a_s * (1 - img_mask)
+            net_input_l_2 = img_b_s * img_mask + uimg_b_s * (1 - img_mask)
+            net_input_2 = torch.cat([net_input_unl_2, net_input_l_2], dim=0)
+            
+             # Model1 Loss
+            out_unl_1 = model1(net_input_unl_1)
+            out_l_1 = model1(net_input_l_1)
+            out_1 = torch.cat([out_unl_1, out_l_1], dim=0)
+            out_soft_1 = torch.softmax(out_1, dim=1)
+            out_max_1 = torch.max(out_soft_1.detach(), dim=1)[0]
+            out_pseudo_1 = torch.argmax(out_soft_1.detach(), dim=1, keepdim=False) 
+            unl_dice_1, unl_ce_1 = mix_loss(out_unl_1, plab_a, lab_a, loss_mask, u_weight=args.u_weight, unlab=True)
+            l_dice_1, l_ce_1 = mix_loss(out_l_1, lab_b, plab_b, loss_mask, u_weight=args.u_weight)
+            loss_ce_1 = unl_ce_1 + l_ce_1
+            loss_dice_1 = unl_dice_1 + l_dice_1
+
+            # Model2 Loss
+            out_unl_2 = model2(net_input_unl_2)
+            out_l_2 = model2(net_input_l_2)
+            out_2 = torch.cat([out_unl_2, out_l_2], dim=0)
+            out_soft_2 = torch.softmax(out_2, dim=1)
+            out_max_2 = torch.max(out_soft_2.detach(), dim=1)[0]
+            out_pseudo_2 = torch.argmax(out_soft_2.detach(), dim=1, keepdim=False) 
+            unl_dice_2, unl_ce_2 = mix_loss(out_unl_2, plab_a_s, lab_a_s, loss_mask, u_weight=args.u_weight, unlab=True)
+            l_dice_2, l_ce_2 = mix_loss(out_l_2, lab_b_s, plab_b_s, loss_mask, u_weight=args.u_weight)
+            loss_ce_2 = unl_ce_2 + l_ce_2
+            loss_dice_2 = unl_dice_2 + l_dice_2
+
+            # Model1 & Model2 Cross Pseudo Supervision
+            pseudo_supervision1 = dice_loss(out_soft_1, out_pseudo_2.unsqueeze(1))  
+            pseudo_supervision2 = dice_loss(out_soft_2, out_pseudo_1.unsqueeze(1))  
+            
+            
+            
+            #      
+            # for student1
+            mix_factors = np.random.beta(
+                0.5, 0.5, size=(args.labeled_bs//2, 1, 1, 1))
+            mix_factors = torch.tensor(
+                mix_factors, dtype=torch.float).cuda()
+            unlabeled_volume_batch_0 = uimg_a
+            unlabeled_volume_batch_1 = uimg_b
+
+            # Mix images
+            batch_ux_mixed = unlabeled_volume_batch_0 * \
+                (1.0 - mix_factors) + \
+                unlabeled_volume_batch_1 * mix_factors
+            input_volume_batch = torch.cat(
+                [labeled_volume_batch, batch_ux_mixed], dim=0)
+            outputs = model1(input_volume_batch)
+            outputs_soft = torch.softmax(outputs, dim=1)
+            with torch.no_grad():
+                ema_output_ux0 = torch.softmax(
+                    ema_model(unlabeled_volume_batch_0), dim=1)
+                ema_output_ux1 = torch.softmax(
+                    ema_model(unlabeled_volume_batch_1), dim=1)
+                batch_pred_mixed = ema_output_ux0 * \
+                    (1.0 - mix_factors) + ema_output_ux1 * mix_factors
+            
+            loss_ce_ict = ce_loss(outputs[:args.labeled_bs],
+                              label_batch[:args.labeled_bs][:].long())
+            loss_dice_ict = dice_loss(
+                outputs_soft[:args.labeled_bs], label_batch[:args.labeled_bs].unsqueeze(1))
+            
+            supervised_loss_ict = 0.5 * (loss_dice_ict + loss_ce_ict)
+                
+            consistency_weight = get_current_consistency_weight(iter_num//150)
+            
+            consistency_loss = torch.mean(
+                (outputs_soft[args.labeled_bs:] - batch_pred_mixed) ** 2)*consistency_weight
+            
+            
+            
+            
+            
+            # FFT
+
+            image_patch_last = process_image_batches(net_input_1, net_input_2,30)
+            image_output_1 = model1(image_patch_last.unsqueeze(1))  
+            image_output_soft_1 = torch.softmax(image_output_1, dim=1)
+            pseudo_image_output_1 = torch.argmax(image_output_soft_1.detach(), dim=1, keepdim=False)
+            image_output_2 = model2(image_patch_last.unsqueeze(1))
+            image_output_soft_2 = torch.softmax(image_output_2, dim=1)
+            pseudo_image_output_2 = torch.argmax(image_output_soft_2.detach(), dim=1, keepdim=False)
+            # Model1 & Model2 Second Step Cross Pseudo Supervision
+            pseudo_supervision3 = dice_loss(image_output_soft_1, pseudo_image_output_2.unsqueeze(1))
+            pseudo_supervision4 = dice_loss(image_output_soft_2, pseudo_image_output_1.unsqueeze(1))
+
+            loss_1 = (loss_dice_1 + loss_ce_1) / 2 + pseudo_supervision1 + pseudo_supervision3
+            loss_2 = (loss_dice_2 + loss_ce_2) / 2 + pseudo_supervision2 + pseudo_supervision4
+            # loss = loss_1 + loss_2
+            loss = loss_1 + loss_2 + consistency_loss +supervised_loss_ict 
+
+            dpl_msp_logit_loss = loss.new_tensor(0.0)
+            dpl_msp_logit_stats = {}
+            if args.use_dpl_msp_logit_lite:
+                dpl_msp_logit_loss, dpl_msp_logit_stats = dpl_msp_logit_lite_loss(
+                    out_1, out_2, image_output_1, image_output_2, outputs, label_batch, args.labeled_bs
+                )
+                loss = loss + args.dpl_msp_logit_lite_weight * dpl_msp_logit_loss
+
+            prediction_disagreement_2d_loss = loss.new_tensor(0.0)
+            prediction_disagreement_2d_stats = {}
+            if args.use_prediction_disagreement_2d_adapt:
+                prediction_disagreement_2d_loss, prediction_disagreement_2d_stats = prediction_disagreement_2d_adapt_loss(
+                    out_unl_1, out_unl_2, args.prediction_disagreement_2d_top_quantile
+                )
+                loss = loss + args.prediction_disagreement_2d_weight * prediction_disagreement_2d_loss
+
+            if args.use_m3hl_mmm_lite:
+                m3hl_loss_1, m3hl_mask_mean_1, m3hl_finite_1 = m3hl_mmm_lite_consistency(
+                    model1, uimg_a, uimg_b, pre_a, pre_b,
+                    args.m3hl_mmm_mask_ratio, args.m3hl_mmm_patch_size)
+                m3hl_loss_2, m3hl_mask_mean_2, m3hl_finite_2 = m3hl_mmm_lite_consistency(
+                    model2, uimg_a_s, uimg_b_s, pre_a_s, pre_b_s,
+                    args.m3hl_mmm_mask_ratio, args.m3hl_mmm_patch_size)
+                m3hl_mmm_loss = 0.5 * (m3hl_loss_1 + m3hl_loss_2)
+                loss = loss + args.m3hl_mmm_weight * m3hl_mmm_loss
+                if iter_num > 0 and iter_num % args.m3hl_mmm_log_interval == 0:
+                    m3hl_mask_mean = 0.5 * (m3hl_mask_mean_1 + m3hl_mask_mean_2)
+                    m3hl_finite = m3hl_finite_1 and m3hl_finite_2 and bool(torch.isfinite(loss).detach().cpu().item())
+                    logging.info('iteration %d : m3hl_mmm_enabled : True, m3hl_mmm_loss : %f, m3hl_mmm_mask_mean : %f, m3hl_mmm_finite : %s' %
+                                 (iter_num, m3hl_mmm_loss.detach().item(), m3hl_mask_mean.detach().item(), str(m3hl_finite)))
+
+            optimizer1.zero_grad()
+            optimizer2.zero_grad()
+
+            loss.backward()
+            optimizer1.step()
+            optimizer2.step()
+
+
+            iter_num = iter_num + 1
+            lr_ = base_lr * (1.0 - iter_num / max_iterations) ** 0.9
+
+            for param_group in optimizer1.param_groups:
+                param_group['lr'] = lr_
+    
+
+            update_model_ema(model1, ema_model, 0.99)
+            
+
+
+            logging.info('iteration %d: loss: %f, model1_loss: %f, model2_loss: %f' % (iter_num, loss, loss_1, loss_2))
+            if args.use_mask_token_prehead_router and iter_num % args.mask_token_log_interval == 0:
+                log_mask_token_router_stats(model1, "model1", iter_num)
+                log_mask_token_router_stats(model2, "model2", iter_num)
+            if args.use_dpl_msp_logit_lite and iter_num % args.dpl_msp_log_interval == 0:
+                log_dpl_msp_logit_lite_stats(
+                    iter_num,
+                    float(dpl_msp_logit_loss.detach().cpu()),
+                    dpl_msp_logit_stats,
+                )
+            if args.use_prediction_disagreement_2d_adapt and iter_num % args.prediction_disagreement_2d_log_interval == 0:
+                log_prediction_disagreement_2d_stats(
+                    iter_num,
+                    prediction_disagreement_2d_stats,
+                )
+            
+            # logging.info('iteration %d: loss: %f, mix_dice: %f, mix_ce: %f'%(iter_num, loss, loss_dice, loss_ce))
+             
+            if iter_num > 0 and iter_num % 200 == 0:
+                model1.eval()
+                metric_list = 0.0
+                for i_batch, sampled_batch in enumerate(loader):
+                    metric_i = test_single_volume_promise(sampled_batch["image"], sampled_batch["mask"], model1, classes=num_classes)
+                    metric_list += np.array(metric_i)
+                metric_list = metric_list / len(db_val)
+                writer.add_scalar('info/model1_val_{}_dice'.format(1),metric_list[0], iter_num)
+                performance1 = np.mean(metric_list, axis=0)
+                if performance1 > best_performance1:
+                    best_performance1 = performance1
+                    save_mode_path = os.path.join(snapshot_path,'model1_iter_{}_dice_{}.pth'.format(iter_num, round(best_performance1, 4)))
+                    save_best = os.path.join(snapshot_path,'{}_best_model.pth'.format(args.model_1))
+                    torch.save(model1.state_dict(), save_mode_path)
+                    torch.save(model1.state_dict(), save_best)
+
+                logging.info('iteration %d : model1_mean_dice : %f' % (iter_num, performance1))
+                metric_list = 0.0
+                for i_batch, sampled_batch in enumerate(test_loader):
+                    metric_i = test_single_volume_promise(sampled_batch["image"], sampled_batch["mask"], model1, classes=num_classes)
+                    metric_list += np.array(metric_i)
+                metric_list = metric_list / len(db_test)
+                writer.add_scalar('info/model1_test_{}_dice'.format(1),metric_list[0], iter_num)
+                performance1_test = np.mean(metric_list, axis=0)
+                
+                logging.info('iteration %d : model1_mean_test_dice : %f' % (iter_num, performance1_test))
+                model1.train()
+
+                # model2.eval()
+                # metric_list = 0.0
+                # for i_batch, sampled_batch in enumerate(loader):
+                #     metric_i = test_single_volume_promise(sampled_batch["image"], sampled_batch["mask"], model2, classes=num_classes)
+                #     metric_list += np.array(metric_i)
+                # metric_list = metric_list / len(db_val)
+                # writer.add_scalar('info/model2_val_{}_dice'.format(1),metric_list[0], iter_num)
+                # performance2 = np.mean(metric_list, axis=0)
+                # if performance2 > best_performance2:
+                #     best_performance2 = performance2
+                #     save_mode_path = os.path.join(snapshot_path,'model2_iter_{}_dice_{}.pth'.format(iter_num, round(best_performance2, 4)))
+                #     save_best = os.path.join(snapshot_path,'{}_best_model.pth'.format(args.model_2))
+                #     torch.save(model2.state_dict(), save_mode_path)
+                #     torch.save(model2.state_dict(), save_best)
+                # logging.info('iteration %d : model2_mean_dice : %f' % (iter_num, performance2))
+                # model2.train()
+
+            if iter_num >= max_iterations:
+                break
+            time1 = time.time()
+        if iter_num >= max_iterations:
+            iterator.close()
+            break
+    final_model_path = os.path.join(snapshot_path, 'model1_iter_{}_final.pth'.format(iter_num))
+    final_alias_path = os.path.join(snapshot_path, '{}_final_model.pth'.format(args.model_1))
+    torch.save(model1.state_dict(), final_model_path)
+    torch.save(model1.state_dict(), final_alias_path)
+    logging.info('self-train final checkpoint saved: %s' % final_model_path)
+    logging.info('self-train final checkpoint alias saved: %s' % final_alias_path)
+    writer.close()
+
+
+if __name__ == "__main__":
+    if not args.deterministic:
+        cudnn.benchmark = True
+        cudnn.deterministic = False
+    else:
+        cudnn.benchmark = False
+        cudnn.deterministic = True
+
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed(args.seed)
+    pre_snapshot_path = "./beta_FFT/PROMISE12_bcp_{}_{}/pre_train".format(args.exp, args.labeled_num)
+    snapshot_path = "./beta_FFT/PROMISE12_bcp_fft_test_seed_{}_{}/self_train".format(args.exp, args.labeled_num)
+    if not os.path.exists(pre_snapshot_path):
+        os.makedirs(pre_snapshot_path)
+
+    
+
+
+
+    # 设置日志记录
+    # logging.basicConfig(filename=os.path.join(pre_snapshot_path, "log.txt"), level=logging.INFO)
+    if not os.path.exists(snapshot_path):
+        os.makedirs(snapshot_path,exist_ok=True)
+
+    shutil.copy('./train_promise12_bcp_fft.py', snapshot_path)
+    logging.basicConfig(filename=pre_snapshot_path + "/log.txt", level=logging.INFO,
+                        format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    logging.info(str(args))
+    pre_train(args, pre_snapshot_path)
+
+
+    logging.basicConfig(filename=snapshot_path + "/log.txt", level=logging.DEBUG, format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    logging.info(str(args))
+    self_train(args,pre_snapshot_path, snapshot_path)

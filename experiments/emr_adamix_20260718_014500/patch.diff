@@ -1,0 +1,19 @@
+--- train_promise12/train_promise12_bcp_fft.py (before SHA256 764a347b...)
++++ train_promise12/train_promise12_bcp_fft.py (after SHA256 3796029e...)
+@@ parser
++ --use_emr_adamix
++ --emr_adamix_log_interval
++ fail-fast against historical AdaMix double flag and standalone EEMS
+@@ reliability
++ EMR_ADAMIX_G_MIN = 0.50
++ emr_adamix_source_reliability
++ emr_adamix_endpoint_stats
+@@ mixed loss
++ optional image_reliability / patch_reliability
++ continuous weighted Dice/CE masks with original default-off branch
+@@ self_train
++ four source-aligned reliability paths and EMR endpoint logging
+--- /dev/null
++++ scripts/run_pb2d_original_2d_emr_adamix_v1.sh
+--- /dev/null
++++ scripts/run_pb2d_original_2d_mask_token_emr_adamix_v1.sh

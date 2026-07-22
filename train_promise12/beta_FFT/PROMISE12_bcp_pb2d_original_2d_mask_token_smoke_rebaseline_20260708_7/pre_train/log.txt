@@ -1,0 +1,37 @@
+[13:25:43.551] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_mask_token_smoke_rebaseline_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=True, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[13:25:44.221] Start pre_training
+[13:25:44.221] 25 iterations per epoch
+[13:25:45.149] iteration 1: loss: 1.331907, mix_dice: 1.166787, mix_ce: 1.497026
+[13:25:45.210] iteration 2: loss: 1.173182, mix_dice: 1.061130, mix_ce: 1.285233
+[13:25:45.260] pretrain fallback saved final checkpoint for short/smoke: ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_mask_token_smoke_rebaseline_20260708_7/pre_train/unet_best_model.pth
+[13:25:45.265] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_mask_token_smoke_rebaseline_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=True, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[13:25:45.521] Loaded from ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_mask_token_smoke_rebaseline_20260708_7/pre_train/unet_best_model.pth
+[13:25:45.528] 25 iterations per epoch
+[13:25:45.946] iteration 1: loss: 5.253782, model1_loss: 2.379965, model2_loss: 2.372558
+[13:25:46.202] iteration 2: loss: 4.789952, model1_loss: 2.186836, model2_loss: 2.214583
+[13:25:46.453] iteration 3: loss: 4.299263, model1_loss: 1.965211, model2_loss: 2.027695
+[13:25:46.702] iteration 4: loss: 4.091923, model1_loss: 1.880523, model2_loss: 1.933471
+[13:25:46.951] iteration 5: loss: 3.930944, model1_loss: 1.821247, model2_loss: 1.824490
+[13:25:46.951] iteration 5 : model1_mask_token_prehead_router_enabled : True, token_utilization : [0.2510295510292053, 0.24494190514087677, 0.2511150538921356, 0.2529134750366211], routing_entropy : 1.3861467838287354, activation_coverage : 1.0, gamma : -0.002625341061502695, residual_to_feature_ratio : 0.2352914810180664, finite : True
+[13:25:46.951] iteration 5 : model2_mask_token_prehead_router_enabled : True, token_utilization : [0.2509821951389313, 0.2448912262916565, 0.2511817514896393, 0.25294479727745056], routing_entropy : 1.3861472606658936, activation_coverage : 1.0, gamma : -0.0023921167012304068, residual_to_feature_ratio : 0.23280635476112366, finite : True
+[13:25:47.229] iteration 6: loss: 4.235665, model1_loss: 2.024631, model2_loss: 1.917492
+[13:25:47.470] iteration 7: loss: 3.961279, model1_loss: 1.823123, model2_loss: 1.833660
+[13:25:47.721] iteration 8: loss: 4.360416, model1_loss: 2.020843, model2_loss: 2.011848
+[13:25:47.972] iteration 9: loss: 3.925690, model1_loss: 1.814562, model2_loss: 1.812176
+[13:25:48.226] iteration 10: loss: 3.949186, model1_loss: 1.805492, model2_loss: 1.837927
+[13:25:48.226] iteration 10 : model1_mask_token_prehead_router_enabled : True, token_utilization : [0.25088322162628174, 0.24495527148246765, 0.2511548101902008, 0.2530066967010498], routing_entropy : 1.3861644268035889, activation_coverage : 1.0, gamma : -0.004541837610304356, residual_to_feature_ratio : 0.2554096579551697, finite : True
+[13:25:48.226] iteration 10 : model2_mask_token_prehead_router_enabled : True, token_utilization : [0.25076717138290405, 0.2449938803911209, 0.2513331472873688, 0.25290578603744507], routing_entropy : 1.3861615657806396, activation_coverage : 1.0, gamma : -0.0052796341478824615, residual_to_feature_ratio : 0.2584180235862732, finite : True
+[13:25:48.482] iteration 11: loss: 4.667292, model1_loss: 2.218756, model2_loss: 2.132840
+[13:25:48.745] iteration 12: loss: 3.781927, model1_loss: 1.754337, model2_loss: 1.758266
+[13:25:48.999] iteration 13: loss: 3.837920, model1_loss: 1.773946, model2_loss: 1.791567
+[13:25:49.247] iteration 14: loss: 5.666066, model1_loss: 2.721813, model2_loss: 2.617941
+[13:25:49.488] iteration 15: loss: 6.182177, model1_loss: 3.076870, model2_loss: 2.817174
+[13:25:49.488] iteration 15 : model1_mask_token_prehead_router_enabled : True, token_utilization : [0.25065019726753235, 0.24500606954097748, 0.2512408494949341, 0.2531028687953949], routing_entropy : 1.3861597776412964, activation_coverage : 1.0, gamma : -0.002904730150476098, residual_to_feature_ratio : 0.2285405844449997, finite : True
+[13:25:49.489] iteration 15 : model2_mask_token_prehead_router_enabled : True, token_utilization : [0.2506082355976105, 0.24473021924495697, 0.2514985501766205, 0.2531629800796509], routing_entropy : 1.3861466646194458, activation_coverage : 1.0, gamma : -0.004244092386215925, residual_to_feature_ratio : 0.23892253637313843, finite : True
+[13:25:49.747] iteration 16: loss: 4.110187, model1_loss: 1.899821, model2_loss: 1.925898
+[13:25:49.995] iteration 17: loss: 4.016947, model1_loss: 1.862611, model2_loss: 1.865908
+[13:25:50.251] iteration 18: loss: 3.895771, model1_loss: 1.794712, model2_loss: 1.815375
+[13:25:50.499] iteration 19: loss: 3.952271, model1_loss: 1.816486, model2_loss: 1.847342
+[13:25:50.759] iteration 20: loss: 3.904582, model1_loss: 1.827609, model2_loss: 1.784870
+[13:25:50.759] iteration 20 : model1_mask_token_prehead_router_enabled : True, token_utilization : [0.2503235340118408, 0.2448175996541977, 0.25169631838798523, 0.2531625032424927], routing_entropy : 1.3861439228057861, activation_coverage : 1.0, gamma : -0.0009785910369828343, residual_to_feature_ratio : 0.2382553368806839, finite : True
+[13:25:50.760] iteration 20 : model2_mask_token_prehead_router_enabled : True, token_utilization : [0.250466912984848, 0.2445254623889923, 0.25207293033599854, 0.25293466448783875], routing_entropy : 1.3861362934112549, activation_coverage : 1.0, gamma : 0.0030364582780748606, residual_to_feature_ratio : 0.24473431706428528, finite : True

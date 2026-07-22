@@ -1,0 +1,78 @@
+# PB2D used innovation ideas ledger
+# Created after UAC_CPS_DELAY3K_V3 closure.
+used_ideas:
+  - id: MASK_TOKEN_PREHEAD_ROUTER_V1
+    family: decoder_prehead_mask_token
+    status: KEEP_INNOVATION_1
+  - id: PEER_SOFT_KL
+    family: peer_soft_kl_distillation
+    status: DISCARD_NONCANONICAL_CONFOUND
+  - id: DYCON_UC_V1
+    family: uncertainty_consistency
+    status: DISCARD_5K_GATE_FAIL
+  - id: SGRS_LITE_V1
+    family: regional_supervision_lite
+    status: DISCARD_5K_GATE_FAIL
+  - id: M3HL_MMM_LITE_V1
+    family: mutual_mask_mix_soft_consistency
+    status: FULL_VALID_NONLEADING
+  - id: BDW_FFT_V1
+    family: branch_disagreement_weighted_fft
+    status: DISCARD_5K_GATE_FAIL
+  - id: FOS_FFT_V1
+    family: frequency_original_stabilization
+    status: DISCARD_5K_GATE_FAIL
+  - id: UAC_CPS_DELAY3K_V3
+    family: uncertainty_agreement_calibrated_cps
+    status: DISCARD_AFTER_FULL
+    hard_freeze: true
+    no_rerun_no_weight_tuning_no_delay_tuning: true
+
+  - id: ASTC_CSAB_LITE_V1
+    family: image_geometry_boundary_consistency
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_astc_csab_lite_v1_20260708_010000/bridge5k_gate_decision.md
+
+  - id: CMSC_LITE_V1
+    family: centroid_moment_shape_consistency
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_cmsc_lite_v1_20260708_020500/bridge5k_gate_decision.md
+
+  - id: BCSI_SSP_LITE_V1
+    family: soft_semantic_perturbation_consistency
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_bcsi_ssp_lite_v1_20260708_024000/bridge5k_gate_decision.md
+
+  - id: SCALE_CONSISTENCY_LITE_V1
+    family: geometric_scale_consistency_lite
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_scale_consistency_lite_v1_20260708_032000/bridge5k_gate_decision.md
+
+  - id: TOPO_CLDICE_LITE_V1
+    family: topology_connectivity_soft_cldice_lite
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_topo_cldice_lite_v1_20260708_035000/bridge5k_gate_decision.md
+
+- candidate_id: CGPR_POS_HEATMAP_LITE_V1
+  family: centroid_guided_positional_reasoning_heatmap_lite
+  status: discarded_after_corrected_5k_gate
+  evidence: audit/pb2d_source_pool_2026_cgpr_pos_heatmap_lite_v1_20260708_041500/bridge5k_gate_decision.md
+  reuse_policy: no_same_identity_weight_or_sigma_tuning_without_new_defect_hypothesis
+
+- id: PGO_FUZZY_BOUNDARY_LITE_V1
+  timestamp: 20260708_051000
+  mechanism: pareto_guided_fuzzy_boundary_labeling
+  source: 2026_source_pool
+  result: PGO_FUZZY_BOUNDARY_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  best_5k: 0.845381
+  endpoint_5k: 0.844029
+  next_rule: do_not_rerun_same_identity; preserve finite endpoint; continue defect-driven 2026 candidate search
+
+- id: AUPP_PREHEAD_LITE_V1
+  timestamp: 20260708_054500
+  mechanism: probabilistic_decoder_prehead_uncertainty_regularization
+  source: 2026_source_pool
+  result: AUPP_PREHEAD_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  best_5k: 0.851917
+  endpoint_5k: 0.851917
+  next_rule: do_not_rerun_same_identity; preserve endpoint clue; continue defect-driven 2026 candidate search

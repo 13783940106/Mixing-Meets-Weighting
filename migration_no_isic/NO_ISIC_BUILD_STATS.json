@@ -1,0 +1,12 @@
+{
+  "checkpoint_bytes": 74183983876,
+  "checkpoint_file_count": 6636,
+  "checkpoint_file_count_pre": 6636,
+  "checkpoint_inventory_no_isic_count": 6636,
+  "isic_excluded_count": 729,
+  "package_dir": "/home/renguanming/jupyterlab/rgm/migration_packages/beta_fft_no_isic_20260722_235239",
+  "project_bytes": 6118075808,
+  "project_file_count": 11586,
+  "project_file_count_pre": 11554,
+  "timestamp": "20260722_235239"
+}

@@ -1,0 +1,69 @@
+{
+  "protocol": "V15_1_R2_MSCMR_RUN1_MODEFIX_RERUN",
+  "updated_at": "2026-07-19T18:07:00+08:00",
+  "stage": "RUN1_ATTEMPT2_MODEFIX_FULL",
+  "status": "RUN1_ATTEMPT2_NATURAL_COMPLETION__1200_BEST_REPRODUCED_AND_VALID",
+  "blocker": null,
+  "attempt1": {
+    "status": "MSCMR_RUN1_ATTEMPT1_INVALID_ENGINEERING_FAILURE",
+    "run_root": "/home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/mscmr_10pct_beta_fft_2d_baseline_bayeseg_fixed_split_seed1337",
+    "frozen_read_only": true,
+    "formal_result_eligible": false,
+    "cause": "VALIDATION_MODE_LEAK_PLUS_EMA_TEACHER_TRAIN_MODE_CONTAMINATION",
+    "last_checkpoint_use": "AUDIT_ONLY_NEVER_RESUME"
+  },
+  "attempt2": {
+    "identity": "MSCMR_RUN1_ATTEMPT2_MODEFIX",
+    "run_root": "/home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/mscmr_10pct_beta_fft_2d_baseline_bayeseg_fixed_split_seed1337_modefix_rerun",
+    "ratio": "10pct",
+    "seed": 1337,
+    "max_iterations": 30000,
+    "start_iteration": 0,
+    "resume_checkpoint": null,
+    "pretrain_checkpoint": "/home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/mscmr_10pct_pretrain_bayeseg_fixed_split_seed1337/checkpoints/best.ckpt",
+    "pretrain_sha256": "81dc6ef33c958eb9b533b08a6e0c1fa575b652bd9552591beb21c0efad7af47a",
+    "frozen_pretrain_validation_mDice": 0.6232621473953949,
+    "collapse_threshold_mDice": 0.47326214739539485,
+    "engineering_gate": "MSCMR_MODE_FIX_ENGINEERING_PASS",
+    "current_iteration": 240,
+    "latest_validation": {"iteration": 200, "mDice": 0.75878446},
+    "provisional_reported_best": {"iteration": 1200, "mDice": 0.82693768, "status": "MSCMR_RUN1_BEST_UNVERIFIED_OUTLIER"},
+    "formal_verified_best": {"iteration": 1200, "mDice": 0.8269376751741802, "status": "MSCMR_RUN1_1200_BEST_REPRODUCED_AND_VALID"},
+    "mode_lifecycle": {"model1": "TRAIN", "model2": "TRAIN", "ema_teacher": "EVAL", "status": "PASS"}
+  },
+  "processes": {
+    "training_pid": 39615,
+    "controller_pid": 39677,
+    "reporter_pid": 39680,
+    "training_tmux": "mscmr_run1_modefix_train",
+    "controller_tmux": "mscmr_run1_modefix_controller",
+    "reporter_tmux": "mscmr_run1_modefix_live",
+    "duplicate_training": false,
+    "duplicate_controller": false,
+    "controller_exit_stops_training": false
+  },
+  "gpu": {"training_device_fd_bound": true, "single_compute_context": true, "used_memory_mib": 4430},
+  "test_isolation": "FROZEN_TEST_NOT_ACCESSED",
+  "training_authorized": true,
+  "candidate_training_authorized": false,
+  "dynamic_monitoring_gate": "DYNAMIC_MONITORING_ACTIVE",
+  "patch_sha256": {
+    "trainer": "ebddfa3f81179740ae6698efdc8ee37774a956628b15348dc616f71e509c31e0",
+    "common": "2947812a8b2bd11668c65aaca1b5103794551c4735350ccf3b4ac1777a433509",
+    "evaluator": "9eab50ffa14e01629052978ceb2e74ec05c3b875b2ddddc5df728b9a2c9f5194",
+    "controller": "1c1ef0a355d66ee08a9bb6d38ecf6edf7e265fcc215abf2faca065382915bd98",
+    "reporter": "d54a53de446206ac4691e10109071ab90d6c0a760555806e6622e3d13e94d9b2"
+  },
+  "audit": {
+    "before_fix": "audit/mscmr_run1_mode_leak_code_path_before_fix.md",
+    "patch": "audit/mscmr_run1_mode_fix_patch_audit.md",
+    "files": "audit/mscmr_run1_mode_fix_files.tsv",
+    "engineering_gate": "audit/mscmr_mode_fix_engineering_gate.md",
+    "prevalidation_parity": "audit/mscmr_modefix_prevalidation_parity.md",
+    "mode_lifecycle": "audit/mscmr_mode_lifecycle_regression_test.md",
+    "batchnorm": "audit/mscmr_batchnorm_mode_regression_test.md",
+    "dropout": "audit/mscmr_dropout_mode_regression_test.md",
+    "side_effect": "audit/mscmr_validation_side_effect_regression_test.md"
+  },
+  "next_action": "BASELINE_FORMAL_CLOSURE_REQUIRES_SEPARATE_AUTHORIZATION__NO_TEST_OR_CANDIDATE_STARTED"
+}

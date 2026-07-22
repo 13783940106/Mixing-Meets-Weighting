@@ -1,0 +1,97 @@
+dataset: PROMISE12_PB
+branch_identity: PRE_D0_BRIDGE_VALIDATION_BRANCH
+candidate_id: label_free_disagreement_component_guard_v1
+parent_candidate_id: prediction_disagreement_neighbor_regularization_v2
+control_id: PB2D_FROZEN_SEED1337
+ordinary_25d_reference: PB25D_FORMAL_REBUILD_SEED1337
+status: PREREGISTERED_DESIGN_ONLY_NOT_RUNNABLE_YET
+test_access: NOT_RUN
+
+primary_endpoint:
+  metric: VAL_VOL_DSC
+  requirement: "> 0.878700"
+  source: frozen PB2D validation gate
+
+secondary_endpoints:
+  - metric: ASD_px
+    requirement: no systematic harm vs PB2D and v2 retained cases
+  - metric: HD95_px
+    requirement: no systematic harm vs PB2D and v2 retained cases
+  - metric: pred_fg_ratio
+    requirement: no collapse and no case-level overexpansion/underexpansion pattern
+
+primary_distribution_unit:
+  unit_type: validation_case
+  units:
+    - Case35
+    - Case36
+    - Case37
+    - Case38
+    - Case39
+
+critical_safety_units:
+  - unit: Case37
+    reason: risk sentinel for high disagreement / component instability
+  - unit: Case35
+    reason: v2 retained positive case, must not be erased
+  - unit: Case36
+    reason: v2 retained positive case and v3 severe under-segmentation harm
+  - unit: Case38
+    reason: near-miss case repaired by v3, must not regress below safety margin
+  - unit: Case39
+    reason: near-miss / residual boundary-shape harm case
+
+harm_margins:
+  per_case_dsc_delta_vs_pb2d: -0.001185
+  case37_absolute_dsc_floor: 0.877841
+  source: frozen project instruction and v2/v3 audits
+
+positive_coverage_target:
+  minimum_positive_cases_vs_pb2d: 4
+  mean_delta_vs_pb2d: "> 0"
+  median_delta_vs_pb2d: "> 0"
+  leave_one_case_out_mean_delta: "> 0 for every removed case"
+  gain_concentration: no single-case or two-case gain concentration
+
+frozen_components:
+  - dataset split
+  - label budget
+  - seed
+  - training schedule
+  - optimizer
+  - evaluator
+  - checkpoint selection by validation only
+  - no PROMISE12 test
+  - no ACDC/MSD bridge before P-B case-safe gate
+
+mechanism_constraints:
+  default_off: true
+  single_variable: true
+  no_case_id_specialization: true
+  no_validation_oracle: true
+  no_foundation_teacher: true
+  no_heavy_attention: true
+  no_generic_boundary_loss: true
+  no_dataset_loader_change: true
+  no_evaluation_change: true
+  no_test_feedback: true
+
+mechanism_endpoint_requirements:
+  - label_free_guard_enabled
+  - risk_guard_ratio
+  - model_disagreement_ratio
+  - component_risk_ratio
+  - guarded_region_weight_mean
+  - retained_parent_regularizer_weight_mean
+  - loss_finite
+  - checkpoint_finite
+
+rollback_rule:
+  if_any_gate_fails: NO_TEST_NO_ACDC_NO_MULTI_SEED
+  if_v2_retained_strength_erased: rollback
+  if_case37_below_floor: rollback
+  if_case35_or_case36_gain_erased: rollback
+  if_case38_or_case39_below_margin: rollback
+
+next_required_step:
+  PB25D_LABEL_FREE_DISAGREEMENT_COMPONENT_GUARD_V1_G1_G13_COMPLETION_AND_STATIC_PREFLIGHT

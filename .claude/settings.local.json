@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"EXIT_CODE=$?\")",
+      "Bash(python3 -m py_compile /home/renguanming/jupyterlab/rgm/beta-FFT-main/train_ACDC/beta_fft_acdc_repro.py /home/renguanming/jupyterlab/rgm/beta-FFT-main/train_ACDC/pretrain_acdc_clean_supervised.py)",
+      "Bash(bash -n /home/renguanming/jupyterlab/rgm/beta-FFT-main/scripts/launch_acdc_clean_supervised_pretrain_manual.sh)",
+      "Bash(bash -n /home/renguanming/jupyterlab/rgm/beta-FFT-main/scripts/launch_acdc_clean_full_manual.sh)"
+    ]
+  }
+}

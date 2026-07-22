@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Manual template only. Do not run until a clean supervised pretraining entry is confirmed.
+ROOT=/home/renguanming/jupyterlab/rgm/beta-FFT-main
+LABELED_LIST=$ROOT/data/acdc/splits_clean_beta_fft/labeled_clean_beta_fft.list
+OUT_DIR=$ROOT/runs/beta_fft_acdc_clean_supervised_pretrain_seed42
+PRE_DIR=$ROOT/train_ACDC/Pre_model/clean_label12_seed42
+
+cd "$ROOT/train_ACDC"
+test -f "$LABELED_LIST"
+mkdir -p "$OUT_DIR" "$PRE_DIR"
+
+echo "BLOCKED: clean supervised pretraining entry must be implemented/confirmed before launch."
+echo "Required output directory: $PRE_DIR"
+exit 1

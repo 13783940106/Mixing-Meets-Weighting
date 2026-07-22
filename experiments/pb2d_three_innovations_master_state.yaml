@@ -1,0 +1,269 @@
+status: PB2D_THREE_INNOVATIONS_MASTER_STATE_INITIALIZED
+timestamp: 20260707_113257
+project_root: /home/renguanming/jupyterlab/rgm/beta-FFT-main
+dataset: PROMISE12
+dimension: 2D
+primary_seed: 1337
+evaluation: validation-only
+test_access: 0
+official_baseline:
+  identity: PB2D Mask Token matched Arm A OFF
+  best_val_dsc: 0.872497
+  final_val_dsc: 0.861639
+  run_root: runs/pb2d_mt_prehead_router_v1_armA_off_formal_full_seed1337_20260701_011300
+  policy: official baseline for all future PB2D innovation deltas
+historical_pb2d:
+  best_val_dsc: 0.878682
+  policy: HISTORICAL_REFERENCE_ONLY_NOT_FORMAL_BASELINE_NOT_FOR_MAIN_DELTA
+innovations:
+  innovation_1:
+    candidate_id: innovation1_mask_token_mt_prehead_router_v1
+    name: MT-PreHead-Router v1 / Decoder Pre-Head Mask Token
+    status: INDEPENDENT_1PP_QUALIFIED
+    decision: KEEP
+    decision_scope: KEEP_AS_INDEPENDENT_INNOVATION
+    matched_control_best: 0.872497
+    candidate_best: 0.887548
+    delta_vs_official_baseline_best: 0.015051
+    test_access: 0
+    evidence:
+      - audit/mask_token_2d_formal_armA_armB_paired_closure_20260701_025038/formal_status_decision.md
+      - audit/pb2d_official_baseline_lock_20260707_010117/baseline_lock_decision.md
+  innovation_2:
+    status: REQUIRED
+  innovation_3:
+    status: REQUIRED
+routes:
+  route_1_dino_unet:
+    status: NOT_RUNNABLE
+    decision: DISCARD
+    decision_scope: DISCARD_AS_NOT_RUNNABLE
+    audit: audit/pb2d_route1_dino_unet_d0_20260707_113257
+    reason: official implementation requires DINOv3/nnU-Net/backbone replacement/new dependencies/weights and cannot be reduced to a legal minimal PB2D candidate under G9/G10/G12
+  route_2_mm_dino:
+    status: NOT_RUNNABLE
+    decision: DISCARD
+    decision_scope: DISCARD_AS_NOT_RUNNABLE
+    audit: audit/pb2d_route2_mm_dino_d0_20260707_113257
+    reason: official implementation requires remote-sensing DINOv3 framework, torchrun runner/evaluator, external weights, and environment changes; not a legal minimal PB2D candidate
+  route_3_dc_sam:
+    status: CONCEPTUAL_REFERENCE_ONLY
+    decision: DISCARD
+    decision_scope: DISCARD_AS_NOT_RUNNABLE
+    audit: audit/pb2d_route3_dc_sam_d0_20260707_113257
+    reason: core method depends on SAM/SAM2 prompt/support/reference mask/in-context behavior and cannot be made legal without becoming a different mechanism
+  route_4_pr_magic:
+    status: CONCEPTUAL_REFERENCE_ONLY
+    decision: DISCARD
+    decision_scope: DISCARD_AS_NOT_RUNNABLE
+    audit: audit/pb2d_route4_pr_magic_d0_20260707_113257
+    reason: core method depends on test-time SAM prompt refinement, support-query similarity, mask decoder gradient flow, and candidate mask selection
+current_state_cursor: SOURCE_POOL_2026_NEXT_CANDIDATE_DISCOVERY_REQUIRED
+next_automatic_action: continue_2026_source_pool_candidate_discovery_from_canonical_armA_with_corrected_5k_best_gate
+forbidden_actions:
+  - test_access
+  - rerun_mask_token_armA
+  - rerun_mask_token_armB
+  - use_historical_pb2d_as_formal_baseline
+  - change_split_seed_budget_evaluator
+  - parallel_gpu_training
+
+canonical_innovation_startpoint:
+  status: PB2D_CANONICAL_INNOVATION_STARTPOINT_LOCKED
+  canonical_pretrain_checkpoint_path: /home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/pb2d_mt_prehead_router_v1_default_off_clean_seed1337_20260630_181000/work/beta_FFT/PROMISE12_bcp_pb2d_mt_prehead_router_v1_armA_off_formal_full_seed1337_20260701_011300_7/pre_train/unet_best_model.pth
+  canonical_pretrain_checkpoint_sha256: a5431dfc61ee8747de3fe9ddc224c0ad63ddb9a9475d3bdf90e3245e375940d6
+  canonical_pretrain_checkpoint_source_sha256: b476a4c9dd0d3f407030f931db65c4f80a9405815e472016ded257aed67d47e5
+  shared_off_5k_policy: PB2D_SHARED_OFF_5K_BEST_CORRECTED
+  shared_off_5k_source: official Arm A OFF full best validation at or before 5000
+  shared_off_5k_run_path: runs/pb2d_mt_prehead_router_v1_armA_off_formal_full_seed1337_20260701_011300
+  shared_off_5k_best_val_dsc: 0.852812
+  shared_off_5k_best_iteration: 3000
+  shared_off_5k_endpoint_val_dsc: 0.840519
+  shared_off_5k_endpoint_iteration: 5000
+  shared_off_5k_best_equals_endpoint: false
+  shared_off_5k_promotion_margin: 0.003000
+  shared_off_5k_required_candidate_best: 0.855812
+  shared_off_5k_sha256: a5431dfc61ee8747de3fe9ddc224c0ad63ddb9a9475d3bdf90e3245e375940d6
+  official_off_full_run_path: runs/pb2d_mt_prehead_router_v1_armA_off_formal_full_seed1337_20260701_011300
+  official_off_full_best: 0.872497
+  official_off_full_final: 0.861639
+  future_candidate_startpoint_policy: candidate_ON_5k_best_at_or_before_5000_vs_shared_OFF_5k_best_plus_0p003_then_candidate_ON_full_vs_official_OFF_full_only_after_default_off_exact_compatibility_and_run_authorization
+  current_peer_soft_kl_status: PEER_SOFT_KL_CLOSED_REJECTED_HISTORICAL_AUDIT_ONLY
+  comparison_identity: Peer_ON_vs_Peer_OFF_allowed_only_as_PEER_SOFT_KL_SOURCE_FAMILY_MATCHED_RESULT_after_ON_completion
+  default_off_equivalence_status: Peer_OFF_DISCARD_AS_NONCANONICAL_REFERENCE_due_pretrain_checkpoint_confound
+  control_invalidation_status: CONTROL_INVALIDATION_BLOCKER_FOR_USING_PEER_OFF_AS_OFFICIAL_CONTROL
+  audit: audit/pb2d_canonical_innovation_startpoint_20260707_150509
+
+
+peer_soft_kl_source_family_paired_audit_20260707_160039:
+  status: PEER_SOFT_KL_EXPLORATORY_COMPARISON_NOT_RECOVERED
+  decision: DISCARD
+  decision_scope: DISCARD_AS_NONCANONICAL_EXPLORATORY_RESULT
+  peer_off_best: 0.885404
+  peer_off_final: 0.880684
+  peer_on_best: 0.875634
+  peer_on_final: 0.859871
+  peer_on_minus_off_best: -0.009770
+  peer_on_minus_off_final: -0.020813
+  canonical_armA_pretrain_sha256: a5431dfc61ee8747de3fe9ddc224c0ad63ddb9a9475d3bdf90e3245e375940d6
+  peer_off_pretrain_sha256: 389bc14abb49f9f47bd09db52d3535b96132d4787b9975f4c8b689ece77f842d
+  peer_on_pretrain_sha256: c48ce0592da9a608c2ff7f2aea837dbf5ac41b781a5a01154fdb766112d5f9dc
+  audit: audit/peer_soft_kl_source_family_paired_audit_20260707_160039
+  next_automatic_action: RESUME_NEXT_UNFINISHED_2026_SOURCE_POOL_CANDIDATE_FROM_CANONICAL_ARM_A_STARTPOINT
+
+
+dycon_uc_v1_corrected_5k_gate_audit_20260707_174126:
+  candidate_id: DYCON_UC_V1
+  source_family: DyCON-inspired uncertainty-aware ICT consistency
+  status: DYCON_UC_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  decision_scope: DISCARD_AFTER_CORRECTED_5K_BEST_GATE
+  armA_5k_best: 0.852812
+  armA_5k_best_iteration: 3000
+  armA_5k_endpoint: 0.840519
+  dycon_bridge_5k_best: 0.853264
+  dycon_bridge_5k_best_iteration: 4600
+  dycon_bridge_5k_endpoint: 0.849577
+  required_candidate_best: 0.855812
+  margin_vs_required: -0.002548
+  raw_delta_vs_armA_5k_best: 0.000452
+  unauthorized_full_status: UNAUTHORIZED_DIAGNOSTIC_ONLY_STOPPED
+  unauthorized_full_best_observed: 0.868965
+  unauthorized_full_best_iteration: 10400
+  unauthorized_full_latest_val: 0.837231
+  unauthorized_full_latest_val_iteration: 17000
+  unauthorized_full_latest_loss_iteration: 17101
+  official_result: false
+  test_access: 0
+  audit: audit/pb2d_shared_off_5k_best_audit_20260707_174126
+  run_path: runs/pb2d_dycon_uncl_consistency_v1_20260707_160443
+  next_automatic_action: CONTINUE_2026_SOURCE_POOL_NEXT_CANDIDATE_DISCOVERY
+
+
+sgrs_lite_v1_corrected_5k_gate_audit_20260707_181245:
+  candidate_id: SGRS_LITE_V1
+  source_family: synergy_guided_regional_supervision_lite
+  status: SGRS_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  decision_scope: DISCARD_AFTER_CORRECTED_5K_BEST_GATE
+  armA_5k_best: 0.852812
+  armA_5k_best_iteration: 3000
+  armA_5k_endpoint: 0.840519
+  sgrs_bridge_5k_best: 0.851289
+  sgrs_bridge_5k_best_iteration: 4600
+  sgrs_bridge_5k_endpoint: 0.851148
+  required_candidate_best: 0.855812
+  margin_vs_required: -0.004523
+  raw_delta_vs_armA_5k_best: -0.001523
+  default_off_smoke20: PASS
+  enabled_smoke20: PASS
+  bridge5k_completed: true
+  loss_finite: true
+  mechanism_endpoint_finite: true
+  full_authorization: RUN_AUTHORIZATION_FULL_DENIED
+  official_result: false
+  test_access: 0
+  audit: audit/pb2d_source_pool_2026_sgrs_lite_region_consistency_v1_20260707_174840
+  run_path: runs/pb2d_sgrs_lite_region_consistency_v1_20260707_174840
+  next_automatic_action: CONTINUE_2026_SOURCE_POOL_NEXT_CANDIDATE_DISCOVERY_FROM_CANONICAL_ARM_A
+
+
+uac_cps_delay3k_v3_terminal_closure_20260708_004106:
+  candidate_id: UAC_CPS_DELAY3K_V3
+  status: FULL_NOT_QUALIFIED
+  decision: DISCARD
+  decision_scope: DISCARD_AFTER_FULL
+  official_baseline_best: 0.872497
+  official_baseline_final: 0.861639
+  candidate_best: 0.871582
+  candidate_final: 0.865666
+  delta_vs_official_best: -0.000915
+  test_access: 0
+  hard_freeze: NO_UAC_RERUN_NO_WEIGHT_THRESHOLD_DELAY_TUNING_NO_STACK
+  audit: audit/pb2d_source_pool_2026_uac_cps_delay3k_v3_20260707_225200
+  next_automatic_action: RESUME_NEXT_AUTOMATIC_ROUTE
+
+astc_csab_lite_v1_20260708:
+  status: ASTC_CSAB_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  bridge_best_val_dsc: 0.849437
+  bridge_best_iter: 5000
+  bridge_endpoint_val_dsc: 0.849437
+  corrected_required_candidate_best: 0.855812
+  test_access: 0
+  audit: audit/pb2d_source_pool_2026_astc_csab_lite_v1_20260708_010000
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A
+
+cmsc_lite_v1_20260708:
+  status: CMSC_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  bridge_best_val_dsc: 0.850718
+  bridge_best_iter: 5000
+  bridge_endpoint_val_dsc: 0.850718
+  corrected_required_candidate_best: 0.855812
+  test_access: 0
+  audit: audit/pb2d_source_pool_2026_cmsc_lite_v1_20260708_020500
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A
+
+bcsi_ssp_lite_v1_20260708:
+  status: BCSI_SSP_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  bridge_best_val_dsc: 0.849669
+  bridge_best_iter: 3000
+  bridge_endpoint_val_dsc: 0.849212
+  corrected_required_candidate_best: 0.855812
+  test_access: 0
+  audit: audit/pb2d_source_pool_2026_bcsi_ssp_lite_v1_20260708_024000
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A
+
+scale_consistency_lite_v1_20260708:
+  status: SCALE_CONSISTENCY_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  bridge_best_val_dsc: 0.852585
+  bridge_best_iter: 4200
+  bridge_endpoint_val_dsc: 0.849214
+  corrected_required_candidate_best: 0.855812
+  test_access: 0
+  audit: audit/pb2d_source_pool_2026_scale_consistency_lite_v1_20260708_032000
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A
+
+topo_cldice_lite_v1_20260708:
+  status: TOPO_CLDICE_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  bridge_best_val_dsc: 0.850431
+  bridge_best_iter: 3000
+  bridge_endpoint_val_dsc: 0.849238
+  corrected_required_candidate_best: 0.855812
+  test_access: 0
+  audit: audit/pb2d_source_pool_2026_topo_cldice_lite_v1_20260708_035000
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A
+
+
+cgpr_pos_heatmap_lite_v1_20260708:
+  status: CGPR_POS_HEATMAP_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  decision: DISCARD
+  bridge_best_val_dsc: 0.848214
+  bridge_best_iter: 4600
+  bridge_endpoint_val_dsc: 0.845298
+  corrected_required_candidate_best: 0.855812
+  test_access: 0
+  audit: audit/pb2d_source_pool_2026_cgpr_pos_heatmap_lite_v1_20260708_041500
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A
+
+PGO_FUZZY_BOUNDARY_LITE_V1:
+  timestamp: 20260708_051000
+  state: PGO_FUZZY_BOUNDARY_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  bridge5k_best: 0.845381
+  bridge5k_endpoint: 0.844029
+  corrected_gate_required: 0.855812
+  decision: DISCARD
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A
+
+AUPP_PREHEAD_LITE_V1:
+  timestamp: 20260708_054500
+  state: AUPP_PREHEAD_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  bridge5k_best: 0.851917
+  bridge5k_endpoint: 0.851917
+  corrected_gate_required: 0.855812
+  decision: DISCARD
+  next_automatic_action: CONTINUE_2026_DEFECT_DRIVEN_SOURCE_POOL_NEXT_CANDIDATE_FROM_CANONICAL_ARM_A

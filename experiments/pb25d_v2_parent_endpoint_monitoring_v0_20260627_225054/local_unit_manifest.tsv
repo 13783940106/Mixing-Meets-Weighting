@@ -1,0 +1,6 @@
+unit_id	unit_type	role	evidence	allowed_use
+Case35	case	retained_positive	v2 +0.016982 vs PB2D, but FN worse than PB2D	protect from naive FN boosting/regression
+Case36	case	retained_positive	v2 +0.019207 vs PB2D	protect retained parent benefit
+Case37	case	severe_risk_sentinel	v2 -0.024244 vs PB2D, FN/under-volume dominated	diagnostic/safety monitoring only
+Case38	case	mild_watch	v2 -0.001185 vs PB2D	secondary safety watch
+Case39	case	mild_watch	v2 -0.003926 vs PB2D	secondary safety watch

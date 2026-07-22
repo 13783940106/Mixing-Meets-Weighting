@@ -1,0 +1,5 @@
+artifact	canonical_path	status
+intervention_surface	audit/emr_adamix_code_intervention_surface.tsv	COMPLETE
+main_source	train_promise12/train_promise12_bcp_fft.py	PATCHED
+independent_launcher	scripts/run_pb2d_original_2d_emr_adamix_v1.sh	STATIC_PASS
+combination_launcher	scripts/run_pb2d_original_2d_mask_token_emr_adamix_v1.sh	STATIC_PASS_NOT_YET_RUN

@@ -1,0 +1,15 @@
+[11:08:13.519] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='train_PROMISE12_formal_full', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, input_mode='25d_3ch', shape_audit_only=False, phase_transition_audit_only=False, audit_output=None, pretrain_max_iterations_override=None, self_train_max_iterations_override=None, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4)
+[11:08:14.133] Start pre_training
+[11:08:14.133] 25 iterations per epoch
+[11:08:14.585] iteration 1: loss: 1.331907, mix_dice: 1.166787, mix_ce: 1.497026
+[11:08:14.684] iteration 2: loss: 1.172585, mix_dice: 1.060986, mix_ce: 1.284183
+[11:08:14.731] iteration 3: loss: 0.953772, mix_dice: 0.929428, mix_ce: 0.978116
+[11:08:14.782] iteration 4: loss: 0.856500, mix_dice: 1.008326, mix_ce: 0.704673
+[11:08:14.839] iteration 5: loss: 0.722631, mix_dice: 0.973813, mix_ce: 0.471450
+[11:08:14.892] iteration 6: loss: 0.621270, mix_dice: 0.992984, mix_ce: 0.249555
+[11:08:14.947] iteration 7: loss: 0.572559, mix_dice: 0.938754, mix_ce: 0.206364
+[11:08:15.012] iteration 8: loss: 0.555874, mix_dice: 0.982026, mix_ce: 0.129722
+[11:08:15.058] iteration 9: loss: 0.700844, mix_dice: 0.921241, mix_ce: 0.480447
+[11:08:15.118] iteration 10: loss: 0.530386, mix_dice: 0.966257, mix_ce: 0.094515
+[11:08:15.175] iteration 11: loss: 0.516086, mix_dice: 0.940507, mix_ce: 0.091665
+[11:08:15.240] iteration 12: loss: 0.647265, mix_dice: 0.991651, mix_ce: 0.302879

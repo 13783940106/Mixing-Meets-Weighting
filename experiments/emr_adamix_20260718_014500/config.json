@@ -1,0 +1,14 @@
+{
+  "dataset": "PROMISE12",
+  "protocol": "PB2D official original 2D",
+  "seed": 1337,
+  "labeled_num": 7,
+  "batch_size": 16,
+  "labeled_bs": 8,
+  "base_lr": 0.01,
+  "self_train_iterations": 30000,
+  "phi": "sqrt((1-normalized_entropy)*top1_top2_margin)",
+  "g_min": 0.5,
+  "selection": "validation best only",
+  "test_policy": "ORIGINAL_SCRIPT_LOGGED_TEST_ONLY_NOT_GATE"
+}

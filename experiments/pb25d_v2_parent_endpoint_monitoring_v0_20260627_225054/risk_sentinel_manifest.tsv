@@ -1,0 +1,4 @@
+risk_id	status	evidence	candidate_implication
+case37_underseg_fn_volume	SUBGROUP_EVIDENCE_LIMITED	Case37 severe harm with FN and negative volume bias	Cannot train case-targeted mechanism; needs label-free separability
+case35_fn_worse_but_positive	PARENT_STRENGTH_CONFLICT	FN worse than PB2D while DSC improves due FP/far-FP reduction	Naive FN compensation may damage retained strength
+case38_39_mild_watch	SECONDARY_SAFETY_WATCH	Small negative deltas, not same severe pattern	Monitor, do not optimize directly

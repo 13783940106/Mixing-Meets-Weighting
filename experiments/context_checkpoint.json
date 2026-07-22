@@ -1,0 +1,45 @@
+{
+  "version": "V13.8_NEW_MECHANISM_FAMILY_DISCOVERY_CLOSURE",
+  "updated_at": "2026-07-18T18:27:09+08:00",
+  "current_stage": "V13_8_REAL_BLOCKER / ALL_LEGAL_EVIDENCE_UNAVAILABLE_OR_UNRECONSTRUCTABLE",
+  "parent": "MASK_TOKEN_PLUS_ADAMIX",
+  "parent_best_validation_dsc": 0.887704,
+  "stack_third_success_threshold": 0.897704,
+  "active_training": null,
+  "gpu_job": {
+    "launcher_pid": null,
+    "controller_pid": null,
+    "lock": "AVAILABLE_NO_ACTIVE_OWNER",
+    "log": null,
+    "state": null
+  },
+  "fixed_source": {
+    "path": "train_promise12/train_promise12_bcp_fft.py",
+    "sha256": "906c8f1955f6c39da614b06dcc27cc088d841791161f0dc0676b768e926828a7",
+    "restored_byte_exact": true
+  },
+  "v13_7": {
+    "status": "NO_CANDIDATE_ELIGIBLE",
+    "matrix": "audit/v13_7_candidate_disambiguation_matrix.tsv",
+    "report": "audit/v13_7_candidate_disambiguation_report.md",
+    "decision": "audit/v13_7_unique_top1_decision.md"
+  },
+  "v13_8": {
+    "status": "V13_8_NO_ELIGIBLE_NEW_FAMILY",
+    "terminal_state": "REAL_BLOCKER_ALL_LEGAL_EVIDENCE_EXHAUSTED",
+    "matrix": "audit/v13_8_new_mechanism_family_matrix.tsv",
+    "report": "audit/v13_8_new_mechanism_family_report.md",
+    "decision": "audit/v13_8_terminal_decision.md",
+    "patch_authorized": false,
+    "smoke_authorized": false,
+    "gpu_training_authorized": false,
+    "test_access": false
+  },
+  "preserved_status": {
+    "EMR_V1_V2": "PERMANENT_NEGATIVE_DO_NOT_RESTART",
+    "BSCE_V1": "STACK_THIRD_NO_GAIN_NO_SAME_FAMILY_REPLAY",
+    "SADG_SASD": "DEFERRED_DUE_TO_MISSING_CONTEMPORANEOUS_PROVENANCE_NOT_NEGATIVE",
+    "DPCR": "ELIGIBILITY_UNKNOWN_DUE_TO_MISSING_FIXED_PARENT_MODEL2"
+  },
+  "next_legal_action": "NEW_AUTHORITY_OR_MATERIALLY_NEW_LEGAL_INFORMATION_SOURCE_REQUIRED"
+}

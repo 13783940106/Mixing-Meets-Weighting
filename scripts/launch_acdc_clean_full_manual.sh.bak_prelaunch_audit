@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Manual launch template only. This script is intentionally not executed by Codex.
+cd /home/renguanming/jupyterlab/rgm/beta-FFT-main/train_ACDC
+
+conda run -n beta_fft python beta_fft_acdc_repro.py   --root_path /home/renguanming/jupyterlab/rgm/KnowSAM-main/ACDC   --labelnum 7   --seed 42   --gpu 0   --max_iterations 30000   --save_interval 200   --split_name clean   --labeled_list /home/renguanming/jupyterlab/rgm/beta-FFT-main/data/acdc/splits_clean_beta_fft/labeled_clean_beta_fft.list   --unlabeled_list /home/renguanming/jupyterlab/rgm/beta-FFT-main/data/acdc/splits_clean_beta_fft/unlabeled_clean_beta_fft.list   --val_list /home/renguanming/jupyterlab/rgm/beta-FFT-main/data/acdc/splits_clean_beta_fft/val_clean_beta_fft.list   --test_list /home/renguanming/jupyterlab/rgm/beta-FFT-main/data/acdc/splits_clean_beta_fft/test_clean_beta_fft.list   --run_root /home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/beta_fft_acdc_clean_full_seed42_manual   --pretrained_model /home/renguanming/jupyterlab/rgm/beta-FFT-main/train_ACDC/Pre_model/label7

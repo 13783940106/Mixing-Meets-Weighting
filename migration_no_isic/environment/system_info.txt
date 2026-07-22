@@ -1,0 +1,10 @@
+Linux n1 4.18.0-553.el8_10.x86_64 #1 SMP Fri May 24 13:05:10 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+Distributor ID:	Ubuntu
+Description:	Ubuntu 20.04.6 LTS
+Release:	20.04
+Codename:	focal
+Filesystem                           Size  Used Avail Use% Mounted on
+10.91.3.2:/cunchu/users/renguanming  3.3P  295T  3.0P   9% /home/renguanming
+              total        used        free      shared  buff/cache   available
+Mem:          100Gi       1.9Gi        34Mi        69Mi        98Gi        98Gi
+Swap:          31Gi       139Mi        31Gi

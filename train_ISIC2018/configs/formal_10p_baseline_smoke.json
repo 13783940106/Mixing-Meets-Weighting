@@ -1,0 +1,32 @@
+{
+  "amp": true,
+  "arm": "baseline",
+  "attempt_id": "formal_10p_baseline_smoke",
+  "budget": 100,
+  "checkpoint_interval": 50,
+  "component_delta_sha256": "99773472c67c63ad82244ac289081115a9b55112c5954e4eadfdceb9e26a05ec",
+  "contract_phase": "FORMAL_FROZEN_SOURCE",
+  "determinism_runtime_contract": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "ce_backend": "train_ISIC2018.isic2018_common.deterministic_cross_entropy",
+    "ce_backend_sha256": "d9e51ab75116782763aef7604aeed11832e787bf83c670182942db2ece495911",
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "torch_deterministic_algorithms": true
+  },
+  "formal_source_snapshot_sha256": "99773472c67c63ad82244ac289081115a9b55112c5954e4eadfdceb9e26a05ec",
+  "label_ratio": "10p",
+  "labeled_batch": 4,
+  "learning_rate": 0.01,
+  "protocol_sha": "0297c7ce1503d3ed03e7d430b46e8e8cc9706bc6e91a80885dfbe4bbb056f39c",
+  "run_name": "formal_10p_baseline_smoke",
+  "run_root": "/home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/ISIC2018/formal_10p_baseline_smoke",
+  "seed": 1337,
+  "unlabeled_batch": 4,
+  "validation_steps": [
+    0,
+    50,
+    100
+  ],
+  "weight_decay": 0.0001
+}

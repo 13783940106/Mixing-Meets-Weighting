@@ -1,0 +1,35 @@
+[22:08:46.735] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_prediction_disagreement_2d_adapt_smoke_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=False, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=200, use_m3hl_mmm_lite=False, m3hl_mmm_weight=0.05, m3hl_mmm_mask_ratio=0.5, m3hl_mmm_patch_size=56, m3hl_mmm_log_interval=200, use_dpl_msp_logit_lite=False, dpl_msp_logit_lite_weight=0.01, dpl_msp_log_interval=200, use_prediction_disagreement_2d_adapt=True, prediction_disagreement_2d_weight=0.05, prediction_disagreement_2d_top_quantile=0.5, prediction_disagreement_2d_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[22:08:47.347] Start pre_training
+[22:08:47.347] 25 iterations per epoch
+[22:08:48.244] iteration 1: loss: 1.331907, mix_dice: 1.166787, mix_ce: 1.497026
+[22:08:48.300] iteration 2: loss: 1.173186, mix_dice: 1.061131, mix_ce: 1.285241
+[22:08:48.351] pretrain fallback saved final checkpoint for short/smoke: ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_prediction_disagreement_2d_adapt_smoke_20260708_7/pre_train/unet_best_model.pth
+[22:08:48.354] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_prediction_disagreement_2d_adapt_smoke_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=False, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=200, use_m3hl_mmm_lite=False, m3hl_mmm_weight=0.05, m3hl_mmm_mask_ratio=0.5, m3hl_mmm_patch_size=56, m3hl_mmm_log_interval=200, use_dpl_msp_logit_lite=False, dpl_msp_logit_lite_weight=0.01, dpl_msp_log_interval=200, use_prediction_disagreement_2d_adapt=True, prediction_disagreement_2d_weight=0.05, prediction_disagreement_2d_top_quantile=0.5, prediction_disagreement_2d_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[22:08:48.647] Loaded from ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_prediction_disagreement_2d_adapt_smoke_20260708_7/pre_train/unet_best_model.pth
+[22:08:48.654] 25 iterations per epoch
+[22:08:49.114] iteration 1: loss: 5.280719, model1_loss: 2.382296, model2_loss: 2.393179
+[22:08:49.294] iteration 2: loss: 4.814272, model1_loss: 2.185892, model2_loss: 2.237900
+[22:08:49.466] iteration 3: loss: 4.286432, model1_loss: 1.965234, model2_loss: 2.013519
+[22:08:49.634] iteration 4: loss: 4.080057, model1_loss: 1.880787, model2_loss: 1.919825
+[22:08:49.804] iteration 5: loss: 3.941671, model1_loss: 1.821289, model2_loss: 1.834595
+[22:08:49.804] iteration 5 : prediction_disagreement_2d_adapt_enabled : True, prediction_disagreement_2d_loss : 0.012436282820999622, mask_ratio : 0.5, mean_disagreement : 0.0250408835709095, threshold_mean : 0.015430784784257412, finite : True
+[22:08:49.982] iteration 6: loss: 4.227892, model1_loss: 2.024179, model2_loss: 1.909819
+[22:08:50.148] iteration 7: loss: 3.977608, model1_loss: 1.824133, model2_loss: 1.848696
+[22:08:50.340] iteration 8: loss: 4.382568, model1_loss: 2.016901, model2_loss: 2.037820
+[22:08:50.511] iteration 9: loss: 3.918864, model1_loss: 1.812318, model2_loss: 1.807383
+[22:08:50.687] iteration 10: loss: 3.940187, model1_loss: 1.793638, model2_loss: 1.840231
+[22:08:50.687] iteration 10 : prediction_disagreement_2d_adapt_enabled : True, prediction_disagreement_2d_loss : 0.005469352472573519, mask_ratio : 0.5, mean_disagreement : 0.009943023324012756, threshold_mean : 0.002432404085993767, finite : True
+[22:08:50.872] iteration 11: loss: 4.662745, model1_loss: 2.221162, model2_loss: 2.122454
+[22:08:51.054] iteration 12: loss: 3.775641, model1_loss: 1.743225, model2_loss: 1.760001
+[22:08:51.228] iteration 13: loss: 3.853176, model1_loss: 1.750510, model2_loss: 1.828550
+[22:08:51.400] iteration 14: loss: 5.680505, model1_loss: 2.708908, model2_loss: 2.643996
+[22:08:51.586] iteration 15: loss: 5.996675, model1_loss: 3.053921, model2_loss: 2.655270
+[22:08:51.586] iteration 15 : prediction_disagreement_2d_adapt_enabled : True, prediction_disagreement_2d_loss : 0.013240735977888107, mask_ratio : 0.5, mean_disagreement : 0.01795327663421631, threshold_mean : 0.0032560983672738075, finite : True
+[22:08:51.764] iteration 16: loss: 4.238124, model1_loss: 1.909454, model2_loss: 2.036156
+[22:08:51.931] iteration 17: loss: 4.057078, model1_loss: 1.867649, model2_loss: 1.895186
+[22:08:52.105] iteration 18: loss: 3.907767, model1_loss: 1.777550, model2_loss: 1.842860
+[22:08:52.274] iteration 19: loss: 4.012220, model1_loss: 1.775652, model2_loss: 1.945182
+[22:08:52.459] iteration 20: loss: 3.928994, model1_loss: 1.825809, model2_loss: 1.807111
+[22:08:52.459] iteration 20 : prediction_disagreement_2d_adapt_enabled : True, prediction_disagreement_2d_loss : 0.012487118132412434, mask_ratio : 0.5, mean_disagreement : 0.016399387270212173, threshold_mean : 0.003923039883375168, finite : True
+[22:08:52.533] self-train final checkpoint saved: ./beta_FFT/PROMISE12_bcp_fft_test_seed_pb2d_original_2d_prediction_disagreement_2d_adapt_smoke_20260708_7/self_train/model1_iter_20_final.pth
+[22:08:52.533] self-train final checkpoint alias saved: ./beta_FFT/PROMISE12_bcp_fft_test_seed_pb2d_original_2d_prediction_disagreement_2d_adapt_smoke_20260708_7/self_train/unet_final_model.pth

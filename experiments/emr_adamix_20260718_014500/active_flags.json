@@ -1,0 +1,7 @@
+{
+  "use_emr_adamix": true,
+  "use_adamix_bcp_lite_v1": false,
+  "use_stack_early_entropy_margin_sharpening_v1": false,
+  "use_mask_token_prehead_router": false,
+  "all_other_innovation_flags": false
+}

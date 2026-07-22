@@ -1,0 +1,35 @@
+[21:14:04.363] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_dpl_msp_logit_lite_smoke_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=False, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=200, use_m3hl_mmm_lite=False, m3hl_mmm_weight=0.05, m3hl_mmm_mask_ratio=0.5, m3hl_mmm_patch_size=56, m3hl_mmm_log_interval=200, use_dpl_msp_logit_lite=True, dpl_msp_logit_lite_weight=0.01, dpl_msp_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[21:14:04.966] Start pre_training
+[21:14:04.966] 25 iterations per epoch
+[21:14:05.428] iteration 1: loss: 1.331907, mix_dice: 1.166787, mix_ce: 1.497026
+[21:14:05.484] iteration 2: loss: 1.173185, mix_dice: 1.061130, mix_ce: 1.285240
+[21:14:05.536] pretrain fallback saved final checkpoint for short/smoke: ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_dpl_msp_logit_lite_smoke_20260708_7/pre_train/unet_best_model.pth
+[21:14:05.539] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_dpl_msp_logit_lite_smoke_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=False, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=200, use_m3hl_mmm_lite=False, m3hl_mmm_weight=0.05, m3hl_mmm_mask_ratio=0.5, m3hl_mmm_patch_size=56, m3hl_mmm_log_interval=200, use_dpl_msp_logit_lite=True, dpl_msp_logit_lite_weight=0.01, dpl_msp_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[21:14:05.838] Loaded from ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_dpl_msp_logit_lite_smoke_20260708_7/pre_train/unet_best_model.pth
+[21:14:05.844] 25 iterations per epoch
+[21:14:06.283] iteration 1: loss: 5.277593, model1_loss: 2.382313, model2_loss: 2.393121
+[21:14:06.478] iteration 2: loss: 4.813433, model1_loss: 2.185780, model2_loss: 2.238275
+[21:14:06.657] iteration 3: loss: 4.286285, model1_loss: 1.965163, model2_loss: 2.013840
+[21:14:06.833] iteration 4: loss: 4.079797, model1_loss: 1.880802, model2_loss: 1.920062
+[21:14:07.008] iteration 5: loss: 3.941912, model1_loss: 1.821270, model2_loss: 1.834516
+[21:14:07.009] iteration 5 : dpl_msp_logit_lite_enabled : True, dpl_msp_logit_lite_loss : 0.09005746245384216, branch_proto_loss : 2.250075340270996e-05, fft_proto_loss : 5.543231964111328e-05, anchor_proto_loss : 2.7626752853393555e-05, class_sep_loss : 0.899657130241394, fg_branch_proto_norm_model1 : 1.8768041133880615, fg_branch_proto_norm_model2 : 1.9684065580368042, fg_fft_proto_norm_model1 : 1.8447173833847046, fg_fft_proto_norm_model2 : 2.0375068187713623, fg_anchor_proto_norm : 2.5757415294647217, finite : True
+[21:14:07.202] iteration 6: loss: 4.228907, model1_loss: 2.024736, model2_loss: 1.909775
+[21:14:07.374] iteration 7: loss: 3.978414, model1_loss: 1.824073, model2_loss: 1.848754
+[21:14:07.574] iteration 8: loss: 4.383183, model1_loss: 2.017157, model2_loss: 2.037393
+[21:14:07.751] iteration 9: loss: 3.919133, model1_loss: 1.811988, model2_loss: 1.807240
+[21:14:07.953] iteration 10: loss: 3.940358, model1_loss: 1.793267, model2_loss: 1.839984
+[21:14:07.953] iteration 10 : dpl_msp_logit_lite_enabled : True, dpl_msp_logit_lite_loss : 0.09017811715602875, branch_proto_loss : 9.524822235107422e-05, fft_proto_loss : 0.00012040138244628906, anchor_proto_loss : 4.595518112182617e-05, class_sep_loss : 0.8993948698043823, fg_branch_proto_norm_model1 : 2.3732664585113525, fg_branch_proto_norm_model2 : 2.557324171066284, fg_fft_proto_norm_model1 : 2.446331739425659, fg_fft_proto_norm_model2 : 2.728468179702759, fg_anchor_proto_norm : 3.250237464904785, finite : True
+[21:14:08.139] iteration 11: loss: 4.666196, model1_loss: 2.221893, model2_loss: 2.124121
+[21:14:08.328] iteration 12: loss: 3.774425, model1_loss: 1.741333, model2_loss: 1.760273
+[21:14:08.511] iteration 13: loss: 3.847256, model1_loss: 1.746227, model2_loss: 1.827329
+[21:14:08.688] iteration 14: loss: 5.680199, model1_loss: 2.708702, model2_loss: 2.643746
+[21:14:08.860] iteration 15: loss: 5.978967, model1_loss: 3.052002, model2_loss: 2.639653
+[21:14:08.860] iteration 15 : dpl_msp_logit_lite_enabled : True, dpl_msp_logit_lite_loss : 0.09175930172204971, branch_proto_loss : 0.0005934834480285645, fft_proto_loss : 0.0005255937576293945, anchor_proto_loss : 0.0016042441129684448, class_sep_loss : 0.8983809947967529, fg_branch_proto_norm_model1 : 1.800557255744934, fg_branch_proto_norm_model2 : 2.2410237789154053, fg_fft_proto_norm_model1 : 1.7525851726531982, fg_fft_proto_norm_model2 : 2.0421676635742188, fg_anchor_proto_norm : 4.882315158843994, finite : True
+[21:14:09.045] iteration 16: loss: 4.237022, model1_loss: 1.913776, model2_loss: 2.030271
+[21:14:09.220] iteration 17: loss: 4.035491, model1_loss: 1.856267, model2_loss: 1.884369
+[21:14:09.402] iteration 18: loss: 3.887016, model1_loss: 1.755014, model2_loss: 1.845231
+[21:14:09.577] iteration 19: loss: 3.936139, model1_loss: 1.701132, model2_loss: 1.943985
+[21:14:09.746] iteration 20: loss: 3.934153, model1_loss: 1.827562, model2_loss: 1.809826
+[21:14:09.746] iteration 20 : dpl_msp_logit_lite_enabled : True, dpl_msp_logit_lite_loss : 0.0900234654545784, branch_proto_loss : 7.718801498413086e-06, fft_proto_loss : 9.834766387939453e-06, anchor_proto_loss : 0.00019349157810211182, class_sep_loss : 0.8990916609764099, fg_branch_proto_norm_model1 : 1.9864516258239746, fg_branch_proto_norm_model2 : 1.7293989658355713, fg_fft_proto_norm_model1 : 1.990987777709961, fg_fft_proto_norm_model2 : 1.8620812892913818, fg_anchor_proto_norm : 4.072709083557129, finite : True
+[21:14:09.826] self-train final checkpoint saved: ./beta_FFT/PROMISE12_bcp_fft_test_seed_pb2d_original_2d_dpl_msp_logit_lite_smoke_20260708_7/self_train/model1_iter_20_final.pth
+[21:14:09.826] self-train final checkpoint alias saved: ./beta_FFT/PROMISE12_bcp_fft_test_seed_pb2d_original_2d_dpl_msp_logit_lite_smoke_20260708_7/self_train/unet_final_model.pth

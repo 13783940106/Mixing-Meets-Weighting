@@ -1,0 +1,11 @@
+relative_path	status	notes
+data	REFERENCED	project-local dataset/cache/split area; ISIC paths excluded from package
+data_cache	REFERENCED	project-local dataset/cache/split area; ISIC paths excluded from package
+data_staging	REFERENCED	project-local dataset/cache/split area; ISIC paths excluded from package
+data_staging/msd_task07_pancreas/manual_upload/Task07_Pancreas.tar	EXCLUDED_RAW_OR_REBUILDABLE	raw/rebuildable, relink on 5090D if needed
+data_staging/msd_task07_pancreas/manual_ingest_raw	EXCLUDED_RAW_OR_REBUILDABLE	raw/rebuildable, relink on 5090D if needed
+data_staging/msd_task07_pancreas/Task07_Pancreas	EXCLUDED_RAW_OR_REBUILDABLE	raw/rebuildable, relink on 5090D if needed
+data_staging/promise12/raw	EXCLUDED_RAW_OR_REBUILDABLE	raw/rebuildable, relink on 5090D if needed
+data_cache/msd_task07_224_seed42_train196_labeled20/train_images_f16.dat	EXCLUDED_RAW_OR_REBUILDABLE	raw/rebuildable, relink on 5090D if needed
+data_cache/msd_task07_224_seed42_train196_labeled20/train_labels_u8.dat	EXCLUDED_RAW_OR_REBUILDABLE	raw/rebuildable, relink on 5090D if needed
+training_data.zip	EXCLUDED_RAW_OR_REBUILDABLE	raw/rebuildable, relink on 5090D if needed

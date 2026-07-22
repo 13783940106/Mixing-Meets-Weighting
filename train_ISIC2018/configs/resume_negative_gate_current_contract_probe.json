@@ -1,0 +1,30 @@
+{
+  "amp": true,
+  "arm": "candidate",
+  "attempt_id": "resume_negative_gate_current_contract_probe",
+  "budget": 1,
+  "checkpoint_interval": 1,
+  "contract_phase": "PRE_FREEZE_DIAGNOSTIC",
+  "determinism_runtime_contract": {
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "ce_backend": "train_ISIC2018.isic2018_common.deterministic_cross_entropy",
+    "ce_backend_sha256": "d9e51ab75116782763aef7604aeed11832e787bf83c670182942db2ece495911",
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "torch_deterministic_algorithms": true
+  },
+  "label_ratio": "5p",
+  "labeled_batch": 4,
+  "learning_rate": 0.01,
+  "protocol_sha": "0297c7ce1503d3ed03e7d430b46e8e8cc9706bc6e91a80885dfbe4bbb056f39c",
+  "run_name": "resume_negative_gate_current_contract_probe",
+  "run_root": "/home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/ISIC2018/resume_negative_gate_current_contract_probe",
+  "seed": 1337,
+  "unlabeled_batch": 4,
+  "validation_steps": [
+    0,
+    1,
+    1
+  ],
+  "weight_decay": 0.0001
+}

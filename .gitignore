@@ -1,0 +1,48 @@
+# Experiments and checkpoints
+runs/
+checkpoints/
+outputs/
+results/raw/
+*.ckpt
+*.pth
+*.pt
+*.onnx
+
+# Migration packages
+*.tar
+*.tar.gz
+*.tar.zst
+*.zip
+migration_packages/
+
+# Raw datasets and caches
+data/
+datasets/
+dataset/
+data_cache/
+data_staging/
+*.npy
+*.npz
+*.h5
+*.nii
+*.nii.gz
+*.dcm
+
+# Python/cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+
+# Logs
+*.log
+tensorboard/
+wandb/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+id_rsa
+id_ed25519

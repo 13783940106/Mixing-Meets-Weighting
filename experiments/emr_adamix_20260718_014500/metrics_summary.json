@@ -1,0 +1,11 @@
+{
+  "canonical": "audit/emr_adamix_v1_full_20260718/metrics_summary.json",
+  "best_val": 0.885899,
+  "best_iter": 23200,
+  "final_val": 0.881132,
+  "delta_vs_parent": -0.001420,
+  "case_safety": "FAIL_SYSTEMATIC_HARM",
+  "mechanism_endpoint": "PASS",
+  "decision": "EMR_ADAMIX_NEGATIVE",
+  "combination_authorized": false
+}

@@ -1,0 +1,131 @@
+
+- timestamp: 20260627_225249
+  family: fn_undersegmentation_compensation
+  status: frozen_for_training
+  evidence_dir: audit/pb25d_v2_fn_underseg_family_exit_20260627_225249
+  reason: subgroup_evidence_limited_and_parent_strength_conflict
+
+- timestamp: 20260628_003336
+  family: runtime_proxy_prototype_risk_training
+  status: frozen_for_training
+  evidence_dir: audit/pb25d_v2_runtime_proxy_family_exit_20260628_003336
+  reason: singleton_dominated_and_retained_positive_trigger_risk
+
+- timestamp: 20260628_003954
+  family: parent_arbitrated_2d_v2_inference_gate
+  status: frozen_for_implementation
+  evidence_dir: audit/pb25d_v2_parent_arbitration_family_exit_20260628_003954
+  reason: threshold_provenance_failed_best_label_free_rule_left_case39_harmful
+
+- timestamp: 20260707_113257
+  family: decoder_prehead_mask_token_router
+  candidate_id: innovation1_mask_token_mt_prehead_router_v1
+  status: keep_as_independent_innovation
+  evidence_dir: audit/mask_token_2d_formal_armA_armB_paired_closure_20260701_025038
+  official_baseline_best: 0.872497
+  candidate_best: 0.887548
+  delta_vs_official_baseline_best: 0.015051
+  test_access: 0
+  reason: matched Arm A OFF vs Arm B ON full validation-only result exceeds +1pp and is frozen as Innovation 1
+
+- timestamp: 20260707_113257
+  family: foundation_dense_feature_backbone_route
+  candidate_id: route1_dino_unet
+  status: discard_as_not_runnable
+  evidence_dir: audit/pb2d_route1_dino_unet_d0_20260707_113257
+  reason: official Dino U-Net requires DINOv3/nnU-Net/backbone replacement/new dependencies/weights and cannot be reduced to a legal minimal PB2D candidate under G9/G10/G12
+
+- timestamp: 20260707_113257
+  family: foundation_dense_feature_remote_sensing_route
+  candidate_id: route2_mm_dino
+  status: discard_as_not_runnable
+  evidence_dir: audit/pb2d_route2_mm_dino_d0_20260707_113257
+  reason: official MM-DINO requires remote-sensing DINOv3 framework, torchrun runner/evaluator, external weights, and environment changes; not a legal minimal PB2D candidate
+
+- timestamp: 20260707_113257
+  family: sam_in_context_prompt_dual_consistency
+  candidate_id: route3_dc_sam
+  status: discard_as_not_runnable
+  evidence_dir: audit/pb2d_route3_dc_sam_d0_20260707_113257
+  reason: core method depends on SAM/SAM2 prompt/support/reference mask/in-context behavior, which violates current PB2D constraints
+
+- timestamp: 20260707_113257
+  family: sam_test_time_prompt_refinement
+  candidate_id: route4_pr_magic
+  status: discard_as_not_runnable
+  evidence_dir: audit/pb2d_route4_pr_magic_d0_20260707_113257
+  reason: core method depends on test-time SAM prompt refinement, support-query similarity, mask decoder gradient flow, and candidate mask selection
+
+- timestamp: 20260707_174126
+  family: dycon_uncertainty_consistency
+  candidate_id: DYCON_UC_V1
+  status: discard_after_corrected_5k_best_gate
+  evidence_dir: audit/pb2d_shared_off_5k_best_audit_20260707_174126
+  armA_5k_best: 0.852812
+  candidate_5k_best: 0.853264
+  required_candidate_5k_best: 0.855812
+  diagnostic_full_status: unauthorized_diagnostic_only_stopped
+  diagnostic_full_best_observed: 0.868965
+  test_access: 0
+  reason: corrected 5k gate uses best@<=5000 rather than endpoint@5000; candidate missed the required +0.003 margin and the later full was stopped as non-official diagnostic evidence
+
+- timestamp: 20260707_181245
+  family: synergy_guided_regional_supervision_lite
+  candidate_id: SGRS_LITE_V1
+  status: discard_after_corrected_5k_best_gate
+  evidence_dir: audit/pb2d_source_pool_2026_sgrs_lite_region_consistency_v1_20260707_174840
+  armA_5k_best: 0.852812
+  candidate_5k_best: 0.851289
+  required_candidate_5k_best: 0.855812
+  full_authorization: denied
+  test_access: 0
+  reason: SGRS-Lite was engineering-safe but failed the corrected 5k best gate; it may not proceed to full and must not be reused as the same candidate with tuned thresholds or weights
+
+  - id: ASTC_CSAB_LITE_V1
+    family: image_geometry_boundary_consistency
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_astc_csab_lite_v1_20260708_010000/bridge5k_gate_decision.md
+
+  - id: CMSC_LITE_V1
+    family: centroid_moment_shape_consistency
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_cmsc_lite_v1_20260708_020500/bridge5k_gate_decision.md
+
+  - id: BCSI_SSP_LITE_V1
+    family: soft_semantic_perturbation_consistency
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_bcsi_ssp_lite_v1_20260708_024000/bridge5k_gate_decision.md
+
+  - id: SCALE_CONSISTENCY_LITE_V1
+    family: geometric_scale_consistency_lite
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_scale_consistency_lite_v1_20260708_032000/bridge5k_gate_decision.md
+
+  - id: TOPO_CLDICE_LITE_V1
+    family: topology_connectivity_soft_cldice_lite
+    status: DISCARD_5K_GATE_FAIL
+    evidence: audit/pb2d_source_pool_2026_topo_cldice_lite_v1_20260708_035000/bridge5k_gate_decision.md
+
+- candidate_id: CGPR_POS_HEATMAP_LITE_V1
+  family: centroid_guided_positional_reasoning_heatmap_lite
+  status: discarded_after_corrected_5k_gate
+  evidence: audit/pb2d_source_pool_2026_cgpr_pos_heatmap_lite_v1_20260708_041500/bridge5k_gate_decision.md
+  reuse_policy: no_same_identity_weight_or_sigma_tuning_without_new_defect_hypothesis
+
+- id: PGO_FUZZY_BOUNDARY_LITE_V1
+  timestamp: 20260708_051000
+  mechanism: pareto_guided_fuzzy_boundary_labeling
+  source: 2026_source_pool
+  result: PGO_FUZZY_BOUNDARY_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  best_5k: 0.845381
+  endpoint_5k: 0.844029
+  next_rule: do_not_rerun_same_identity; preserve finite endpoint; continue defect-driven 2026 candidate search
+
+- id: AUPP_PREHEAD_LITE_V1
+  timestamp: 20260708_054500
+  mechanism: probabilistic_decoder_prehead_uncertainty_regularization
+  source: 2026_source_pool
+  result: AUPP_PREHEAD_LITE_V1_BRIDGE_NOT_QUALIFIED_UNDER_CORRECTED_BEST_5K_GATE
+  best_5k: 0.851917
+  endpoint_5k: 0.851917
+  next_rule: do_not_rerun_same_identity; preserve endpoint clue; continue defect-driven 2026 candidate search

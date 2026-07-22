@@ -1,0 +1,22 @@
+{
+  "amp": true,
+  "arm": "candidate",
+  "attempt_id": "v2a2",
+  "budget": 6,
+  "checkpoint_interval": 3,
+  "contract_phase": "PRE_FREEZE_DIAGNOSTIC",
+  "label_ratio": "5p",
+  "labeled_batch": 4,
+  "learning_rate": 0.01,
+  "protocol_sha": "0297c7ce1503d3ed03e7d430b46e8e8cc9706bc6e91a80885dfbe4bbb056f39c",
+  "run_name": "candidate_contract_v2_interrupted_a2",
+  "run_root": "/home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/ISIC2018/candidate_contract_v2_interrupted_a2",
+  "seed": 1338,
+  "unlabeled_batch": 4,
+  "validation_steps": [
+    0,
+    3,
+    6
+  ],
+  "weight_decay": 0.0001
+}

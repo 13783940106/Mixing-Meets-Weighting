@@ -1,0 +1,8 @@
+{
+  "created_at": "2026-06-26T03:49:14+08:00",
+  "candidate_id": "spatial_center_protected_neighbor_gate_v1",
+  "run": "runs/pb25d_improvement_spatial_center_protected_neighbor_gate_v1_seed1337_20260626_034700",
+  "audit": "audit/pb25d_improvement_spatial_center_protected_neighbor_gate_v1_20260626_034700",
+  "source_discovery": "audit/pb25d_innovation_discovery_expansion_20260626_034000",
+  "parent_work": "runs/pb25d_improvement_selective_neighbor_gate_v1_repair1_seed1337_20260626_004500/work"
+}

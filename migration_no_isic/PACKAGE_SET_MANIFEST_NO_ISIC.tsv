@@ -1,0 +1,4 @@
+package	purpose
+beta_fft_no_isic_project_20260722_235239.tar.zst	project/source/non-ISIC logs/audits/manifests excluding checkpoints/raw/ISIC assets
+beta_fft_no_isic_checkpoints_20260722_235239.tar.zst	non-ISIC checkpoint/model files
+beta_fft_no_isic_external_assets_20260722_235239.tar.zst	external manifests only

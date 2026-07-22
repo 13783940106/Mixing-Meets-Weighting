@@ -1,0 +1,11 @@
+file	purpose
+candidate_card.md	identity and not-trainable rationale
+acceptance_contract.yaml	audit-only acceptance contract
+v2_parent_preservation_contract.md	parent preservation requirements
+local_unit_manifest.tsv	retained/risk local units
+risk_sentinel_manifest.tsv	risk sentinel definitions
+source_a_to_d_evidence.md	Source A-D evidence references
+mechanism_endpoint_contract.md	endpoint requirements before implementation
+patch_plan.md	no training patch approved
+preregistration.md	preregistered audit-only state
+artifact_manifest.tsv	this manifest

@@ -1,0 +1,20 @@
+candidate_id: prediction_disagreement_boundary_volume_stabilized_v3
+retained_component: v2 residual-harm gated prediction disagreement regularization
+target_bottleneck: boundary-dominant local harm with volume-bias instability
+new_compensating_mechanism: boundary-volume stabilizer inside existing regularizer
+default_off_switch: use_boundary_volume_stabilized_disagreement_v3
+single_changed_variable: risk-local modulation of existing regularizer
+frozen_components:
+- split
+- label budget
+- training length
+- optimizer
+- scheduler
+- BCP
+- FFT
+- EMA
+- pseudo-label main logic
+- evaluator
+- checkpoint rule
+- test policy
+status: PREREGISTERED_PENDING_GATE_BUNDLE

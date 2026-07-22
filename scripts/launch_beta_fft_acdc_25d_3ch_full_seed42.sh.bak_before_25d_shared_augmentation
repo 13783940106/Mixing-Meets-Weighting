@@ -1,0 +1,89 @@
+#!/bin/bash
+# beta-FFT ACDC 2.5D 3-channel Full Training Launch Script
+# generated_at: 2026-06-18
+# status: MANUAL_LAUNCH_ONLY - do NOT auto-execute
+
+set -euo pipefail
+
+RUN_ROOT="/home/renguanming/jupyterlab/rgm/beta-FFT-main/runs/beta_fft_acdc_25d_3ch_official_full_seed42"
+PID_FILE="${RUN_ROOT}/launcher.pid"
+
+# ============== SAFETY CHECKS ==============
+if [ -d "${RUN_ROOT}/checkpoints" ] && [ -f "${RUN_ROOT}/checkpoints/best.ckpt" ]; then
+    echo "ERROR: ${RUN_ROOT} already contains checkpoints. Refusing to overwrite."
+    echo "Remove manually if intentional: rm -rf ${RUN_ROOT}/checkpoints"
+    exit 1
+fi
+
+if [ -f "${PID_FILE}" ]; then
+    OLD_PID=$(cat "${PID_FILE}" 2>/dev/null)
+    if kill -0 "${OLD_PID}" 2>/dev/null; then
+        echo "ERROR: Existing training process running with PID ${OLD_PID}"
+        exit 1
+    fi
+fi
+
+# ============== PATH CHECKS ==============
+REQUIRED_PATHS=(
+    "/home/renguanming/jupyterlab/rgm/beta-FFT-main/train_ACDC/beta_fft_acdc_repro.py"
+    "/home/renguanming/jupyterlab/rgm/beta-FFT-main/train_ACDC/Pre_model/label7/unet_best_model.pth"
+    "/home/renguanming/jupyterlab/rgm/KnowSAM-main/ACDC/data"
+)
+for p in "${REQUIRED_PATHS[@]}"; do
+    if [ ! -e "$p" ]; then
+        echo "ERROR: Required path not found: $p"
+        exit 1
+    fi
+done
+
+# ============== SETUP ==============
+mkdir -p "${RUN_ROOT}/"{checkpoints,logs,audit}
+echo $$ > "${PID_FILE}"
+
+echo "============================================"
+echo "beta-FFT ACDC 2.5D 3-channel Full Training"
+echo "run_root=${RUN_ROOT}"
+echo "input_mode=25d_3ch"
+echo "seed=42"
+echo "max_iterations=30000"
+echo "started at: $(date)"
+echo "============================================"
+
+# ============== LAUNCH ==============
+cd /home/renguanming/jupyterlab/rgm/beta-FFT-main
+
+conda run --no-capture-output -n beta_fft python3 train_ACDC/beta_fft_acdc_repro.py \
+  --root_path /home/renguanming/jupyterlab/rgm/KnowSAM-main/ACDC \
+  --exp beta_fft_acdc_25d_3ch_official_full_seed42 \
+  --model unet \
+  --max_iterations 30000 \
+  --batch_size 24 \
+  --labeled_bs 12 \
+  --labelnum 7 \
+  --base_lr 0.01 \
+  --seed 42 \
+  --gpu 0 \
+  --consistency 0.1 \
+  --consistency_rampup 200.0 \
+  --magnitude 6.0 \
+  --s_param 6 \
+  --patch_size 64 \
+  --h_size 4 \
+  --w_size 4 \
+  --top_num 4 \
+  --data_manifest_name official \
+  --pretrained_model train_ACDC/Pre_model/label7 \
+  --input_mode 25d_3ch \
+  --context_slices 3 \
+  --run_root "${RUN_ROOT}" \
+  2>&1 | tee "${RUN_ROOT}/train_console.log"
+
+EXIT_CODE=$?
+
+echo "============================================"
+echo "Training completed with exit code: ${EXIT_CODE}"
+echo "ended at: $(date)"
+echo "============================================"
+
+rm -f "${PID_FILE}"
+exit ${EXIT_CODE}

@@ -1,0 +1,29 @@
+[13:25:26.777] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_baseline_smoke_rebaseline_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=False, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[13:25:27.627] Start pre_training
+[13:25:27.627] 25 iterations per epoch
+[13:25:28.080] iteration 1: loss: 1.331907, mix_dice: 1.166787, mix_ce: 1.497026
+[13:25:28.135] iteration 2: loss: 1.173181, mix_dice: 1.061128, mix_ce: 1.285234
+[13:25:28.308] pretrain fallback saved final checkpoint for short/smoke: ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_baseline_smoke_rebaseline_20260708_7/pre_train/unet_best_model.pth
+[13:25:28.311] Namespace(root_path='/home/renguanming/jupyterlab/rgm/beta-FFT-main/data_staging/promise12/20260624_141558/data_promise12', exp='pb2d_original_2d_baseline_smoke_rebaseline_20260708', model_1='unet', model_2='swin_unet', max_iterations=30000, batch_size=16, deterministic=1, base_lr=0.01, image_size=[224, 224], seed=1337, num_classes=2, cfg='./configs/swin_tiny_patch4_window7_224_lite.yaml', opts=None, zip=False, cache_mode='part', resume=None, accumulation_steps=None, use_checkpoint=False, amp_opt_level='O1', tag=None, eval=False, throughput=False, labeled_bs=8, labeled_num=7, gpu='0', ema_decay=0.99, consistency_type='mse', consistency=0.1, consistency_rampup=200.0, u_weight=0.5, patch_size=56, h_size=4, w_size=4, top_num=4, use_mask_token_prehead_router=False, mask_token_num=4, mask_token_dim=16, mask_token_log_interval=5, pretrain_max_iterations_override=2, self_train_max_iterations_override=20)
+[13:25:28.552] Loaded from ./beta_FFT/PROMISE12_bcp_pb2d_original_2d_baseline_smoke_rebaseline_20260708_7/pre_train/unet_best_model.pth
+[13:25:28.561] 25 iterations per epoch
+[13:25:28.955] iteration 1: loss: 5.276758, model1_loss: 2.382345, model2_loss: 2.393151
+[13:25:29.129] iteration 2: loss: 4.812569, model1_loss: 2.185736, model2_loss: 2.238351
+[13:25:29.300] iteration 3: loss: 4.285222, model1_loss: 1.965194, model2_loss: 2.013668
+[13:25:29.468] iteration 4: loss: 4.079025, model1_loss: 1.880780, model2_loss: 1.920202
+[13:25:29.636] iteration 5: loss: 3.941007, model1_loss: 1.821347, model2_loss: 1.834446
+[13:25:29.811] iteration 6: loss: 4.227878, model1_loss: 2.024808, model2_loss: 1.909525
+[13:25:29.975] iteration 7: loss: 3.977809, model1_loss: 1.824504, model2_loss: 1.848704
+[13:25:30.145] iteration 8: loss: 4.382230, model1_loss: 2.017046, model2_loss: 2.037471
+[13:25:30.316] iteration 9: loss: 3.918160, model1_loss: 1.811951, model2_loss: 1.807240
+[13:25:30.490] iteration 10: loss: 3.939106, model1_loss: 1.792783, model2_loss: 1.840176
+[13:25:30.671] iteration 11: loss: 4.666273, model1_loss: 2.221980, model2_loss: 2.125406
+[13:25:30.851] iteration 12: loss: 3.771234, model1_loss: 1.739736, model2_loss: 1.760020
+[13:25:31.024] iteration 13: loss: 3.846265, model1_loss: 1.745649, model2_loss: 1.827827
+[13:25:31.193] iteration 14: loss: 5.679364, model1_loss: 2.709065, model2_loss: 2.643629
+[13:25:31.357] iteration 15: loss: 5.971055, model1_loss: 3.054251, model2_loss: 2.630821
+[13:25:31.532] iteration 16: loss: 4.234895, model1_loss: 1.911720, model2_loss: 2.030105
+[13:25:31.701] iteration 17: loss: 4.030720, model1_loss: 1.860846, model2_loss: 1.874377
+[13:25:31.874] iteration 18: loss: 3.907147, model1_loss: 1.773884, model2_loss: 1.846776
+[13:25:32.042] iteration 19: loss: 3.968702, model1_loss: 1.740815, model2_loss: 1.934942
+[13:25:32.229] iteration 20: loss: 3.925192, model1_loss: 1.824597, model2_loss: 1.803630

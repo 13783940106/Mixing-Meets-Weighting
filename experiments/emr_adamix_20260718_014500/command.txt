@@ -1,0 +1,1 @@
+PB2D_EXP=pb2d_original_2d_emr_adamix_v1_full_20260718 PB2D_GPU=0 bash scripts/run_pb2d_original_2d_emr_adamix_v1.sh
