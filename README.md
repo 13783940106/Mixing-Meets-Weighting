@@ -15,8 +15,8 @@ Code for **Mixing Meets Weighting: Confidence-Modulated Semi-Supervised Medical 
 Use Python 3.10.20 and a CUDA GPU. The recorded A100 profile uses PyTorch 2.4.1+cu121:
 
 ```bash
-git clone https://github.com/13783940106/beta-FFT-main-code.git
-cd beta-FFT-main-code
+git clone https://github.com/13783940106/Mixing-Meets-Weighting.git
+cd Mixing-Meets-Weighting
 python -m pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu121
 python -m pip install -r requirements-core.txt
 ```
@@ -61,7 +61,15 @@ The launcher delegates to `train_ACDC/v21_3_acdc10_third_innovation_transfer.py`
 | COVID5 | 1337 | 120 of 2415 training slices | 30000 | step 1, then every 500 |
 | COVID10 | 1337 | 241 of 2415 training slices | 30000 | step 1, then every 500 |
 
-COVID split/subset seed is independently 42. Selection uses student-1 validation Dice, updating only on strict improvement (earliest-step tie); test scores do not select checkpoints. SGD uses LR 0.01, momentum 0.9, weight decay 0.0001. ACDC SSL keeps constant LR and inherited optimizer state; PROMISE/COVID SSL use the existing polynomial schedule (exponent 0.9). CTW weight is 0.05.
+COVID split/subset seed is independently 42. Selection uses student-1 validation Dice, updating only on strict improvement (earliest-step tie); test scores do not select checkpoints. Both PROMISE/COVID students and the teacher are independent U-Nets constructed from `model_1`; recorded `model_2=swin_unet` is unused. SGD uses LR 0.01, momentum 0.9, weight decay 0.0001. ACDC SSL keeps constant LR and inherited optimizer state; PROMISE/COVID SSL students also load the selected pretraining checkpoint's optimizer state, including momentum buffers, then use the existing polynomial schedule (exponent 0.9). CTW weight is 0.05.
+
+The PROMISE paper config explicitly retains `legacy_overwrite`, the loader behavior in release `8fbca8f`: color jitter replaces the cutout image while its cutout label remains. The corrected `cutout_then_jitter` mode applies jitter to the cutout image and keeps that image/label pair consistent. It is the direct loader/trainer default and is supplied as an **unrun follow-up**, with separate output paths and no assigned paper scores:
+
+```bash
+python tools/train_paper.py --config configs/followup/promise20_cutout_consistent.json
+```
+
+The original FINAL3 loader dependency was not separately archived, so neither mode establishes historical dependency byte identity. See [publication fixes](docs/publication_fixes_20261010.md). ACDC and COVID use separate augmentation paths.
 
 For the ACDC10 eight-combination experiment, `--arm ABC` maps A/B/C to TRC/TCSMix/CTW. `000`, `100`, `010`, `001`, `110`, `101`, `011`, `111` cover every combination, with other settings fixed:
 

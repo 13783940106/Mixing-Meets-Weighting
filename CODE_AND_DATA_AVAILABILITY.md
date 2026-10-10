@@ -2,7 +2,7 @@
 
 ## Repository access
 
-The GitHub API reports [13783940106/beta-FFT-main-code](https://github.com/13783940106/beta-FFT-main-code) as **public**, default branch `main`, checked October 10, 2026. This update does not change visibility. Code, configurations, split manifests and preprocessing/evaluation instructions are provided. Raw/processed images, masks, initialization weights and trained checkpoints are not redistributed here.
+The GitHub API reports [13783940106/Mixing-Meets-Weighting](https://github.com/13783940106/Mixing-Meets-Weighting) as **public**, default branch `main`, checked October 10, 2026. The former `beta-FFT-main-code` URL redirects to this repository. This update does not change visibility. Code, configurations, split manifests and preprocessing/evaluation instructions are provided. Raw/processed images, masks, initialization weights and trained checkpoints are not redistributed here.
 
 ## Original data and project preprocessing
 
@@ -28,4 +28,4 @@ Provider links/metadata were verified from official pages or provider Zenodo API
 
 ## Manuscript-ready statement
 
-> The source code, experiment configurations, preprocessing scripts and split manifests are publicly available at https://github.com/13783940106/beta-FFT-main-code. Original ACDC and PROMISE12 data are available from their official challenge providers, and the COVID-19 CT Lung and Infection Segmentation Dataset is available at https://doi.org/10.5281/zenodo.3757476. The repository documents project-specific preprocessing and evaluation conventions. Raw and preprocessed medical images and model weights are not redistributed in the repository and remain subject to the data providers' terms.
+> The source code, experiment configurations, preprocessing scripts and split manifests are publicly available at https://github.com/13783940106/Mixing-Meets-Weighting. Original ACDC and PROMISE12 data are available from their official challenge providers, and the COVID-19 CT Lung and Infection Segmentation Dataset is available at https://doi.org/10.5281/zenodo.3757476. The repository documents project-specific preprocessing and evaluation conventions. Raw and preprocessed medical images and model weights are not redistributed in the repository and remain subject to the data providers' terms.

@@ -67,7 +67,10 @@ def cutout_gray(img, mask, p=0.5, size_min=0.02, size_max=0.4, ratio_1=0.3, rati
 
 class Promise12(Dataset):
 
-    def __init__(self, data_dir, mode, out_size):
+    def __init__(self, data_dir, mode, out_size, strong_view_mode='cutout_then_jitter'):
+        if strong_view_mode not in ('cutout_then_jitter', 'legacy_overwrite'):
+            raise ValueError('Unknown PROMISE12 strong-view mode: ' + strong_view_mode)
+        self.strong_view_mode = strong_view_mode
         # store data in the npy file
         self.out_size = out_size
         np_data_path = os.path.join(data_dir, 'npy_image')
@@ -105,7 +108,11 @@ class Promise12(Dataset):
                 img, mask = random_rotate(img, mask)
 
             image_strong, label_strong = cutout_gray(img,mask,p=0.5)
-            image_strong = color_jitter(img).type("torch.FloatTensor")
+            if self.strong_view_mode == 'legacy_overwrite':
+                # Compatibility with release 8fbca8f; see docs/publication_fixes_20261010.md.
+                image_strong = color_jitter(img).type("torch.FloatTensor")
+            else:
+                image_strong = color_jitter(image_strong).type("torch.FloatTensor")
             img_tensor = torch.from_numpy(img).unsqueeze(0)
             mask_tensor = torch.from_numpy(mask)
             mask_strong = torch.from_numpy(label_strong)

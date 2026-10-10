@@ -72,7 +72,7 @@
   },
   "pretrain": {
     "updates": 10000,
-    "optimizer": "fresh SGD for each stage"
+    "optimizer": "fresh SGD for pretraining; SSL students load its saved optimizer state"
   },
   "ssl_updates_per_student": 30000,
   "manifests": {
@@ -87,11 +87,18 @@
     "momentum": 0.9,
     "weight_decay": 0.0001,
     "learning_rate": 0.01,
-    "ssl_schedule": "polynomial exponent 0.9"
+    "ssl_schedule": "polynomial exponent 0.9",
+    "ssl_initialization": "Both students load net and opt from the validation-selected pretraining checkpoint, including momentum buffers."
   },
   "historical_validation_best": {
     "step": 22500,
     "score": 0.8322,
     "checkpoint_sha256": "b8a0a5eeeefc3b816afcf73fbba16dbc29e9e3c76936a03300fc6bc430cb196b"
+  },
+  "models": {
+    "student_1": "unet",
+    "student_2": "unet",
+    "teacher": "unet",
+    "construction": "All call create_model(), which reads training_args.model_1; recorded model_2=swin_unet is an unused legacy field."
   }
 }

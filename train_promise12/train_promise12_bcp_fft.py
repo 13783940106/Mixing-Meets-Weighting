@@ -365,6 +365,9 @@ parser.add_argument('--covid19_val_manifest', type=str, default=None,
                     help='COVID19 Official20 validation all-slice manifest')
 parser.add_argument('--promise12_slice_indices_json', type=str, default=None,
                     help='PROMISE12 formal labeled/unlabeled slice-index binding')
+parser.add_argument('--promise12_strong_view_mode', type=str, default='cutout_then_jitter',
+                    choices=['cutout_then_jitter', 'legacy_overwrite'],
+                    help='PROMISE12 2D strong view: corrected cutout then jitter, or release 8fbca8f compatibility')
 parser.add_argument('--enable_v22_frozen_x03', action='store_true',
                     help='enable frozen V22 X03 contour reliability loss for Final3 transfer')
 parser.add_argument('--v22_frozen_x03_id', type=str, default='V21_3_X03_CONTOUR_RELIABILITY_WEIGHT',
@@ -2326,6 +2329,8 @@ def self_train_lineage_payload(args, pre_trained_model):
         'covid19_unlabeled_manifest_sha256': covid19_manifest_identity(args.covid19_unlabeled_manifest),
         'covid19_val_manifest_sha256': covid19_manifest_identity(args.covid19_val_manifest),
         'promise12_slice_indices_sha256': promise12_slice_index_identity(args.promise12_slice_indices_json),
+        **({'promise12_strong_view_mode': args.promise12_strong_view_mode}
+           if args.dataset_name == 'promise12' and args.input_mode == '2d' else {}),
     }
 
 def save_self_train_full_checkpoint(path, args, pre_trained_model, model1, model2, ema_model, optimizer1, optimizer2, batch_sampler, iter_num, best_performance1, best_performance2, last_update_trace=None):
@@ -2416,7 +2421,8 @@ def _require_covid19_manifests(args):
 
 def build_train_dataset_and_sampler(args, batch_size):
     if args.dataset_name != 'covid19_official20':
-        db_train = Promise12_25D(args.root_path, mode='train', out_size=224) if args.input_mode == '25d_3ch' else Promise12(args.root_path, mode='train', out_size=224)
+        db_train = Promise12_25D(args.root_path, mode='train', out_size=224) if args.input_mode == '25d_3ch' else Promise12(
+            args.root_path, mode='train', out_size=224, strong_view_mode=args.promise12_strong_view_mode)
         total_slices = len(db_train)
         if args.promise12_slice_indices_json:
             _, labeled_idxs, unlabeled_idxs = _load_promise12_slice_indices(args.promise12_slice_indices_json)

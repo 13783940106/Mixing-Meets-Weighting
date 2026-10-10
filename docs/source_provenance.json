@@ -151,7 +151,8 @@
     "source_path": "train_promise12/dataloaders/promise12.py",
     "source_sha256": "8a732a3eafafee5f62c1ae951c2ea48c1ebcb64f2839d4b84cc2b3f22b64b3f6",
     "source_status": "current dependency copy",
-    "published_sha256": "8a732a3eafafee5f62c1ae951c2ea48c1ebcb64f2839d4b84cc2b3f22b64b3f6"
+    "published_sha256": "b57d4fc3d98676b587cb4ac79fdac85c98db46a41181be757a0b75268079f60d",
+    "publication_changes": "2026-10-10: corrected cutout-then-jitter default plus explicit legacy_overwrite compatibility; see docs/publication_fixes_20261010.md. Historical imported dependency bytes are not established."
   },
   {
     "published_file": "train_promise12/dataloaders/dataset.py",
@@ -200,7 +201,8 @@
     "source_path": "experiments/three_innovation_ablation_transfer_v22_0/PROMISE20_FINAL3/self_train/train_promise12_bcp_fft.py",
     "source_sha256": "e1006ebe9731d7665a886dc5f897f130c5818c132fa575cc16c9ea845cb27386",
     "source_status": "archived shared Final3 trainer",
-    "published_sha256": "27baf9dd0c16f1998c149b9ef538031ba17c83353dc49cb50446c0071b6b4947"
+    "published_sha256": "05a766c3c9329d847004e7a2b5967c0c36731e2edd715cb2af61d1c673e990d6",
+    "publication_changes": "Portable data path and image_size parsing; 2026-10-10 adds an explicit PROMISE12 2D strong-view mode and includes that mode in new full-state checkpoint lineage. Paper config keeps legacy_overwrite."
   },
   {
     "published_file": "tools/prepare_data.py",
@@ -212,7 +214,8 @@
     "published_file": "tools/evaluate_paper.py",
     "source_path": "tools/v22_0_acdc_test_frozen_checkpoint.py + tools/v22_1_postfull_test_launcher.py",
     "source_status": "publication CLI with existing inference and metric definitions",
-    "published_sha256": "9fa154a3275b6e952787fac4b0cc8a69393f7de9bcfdbb0191b6263a2176ded3"
+    "published_sha256": "f8863b0f637ba23e95139e61a1888241a6a3a4b1761add74fc7e04234b806405",
+    "publication_changes": "2026-10-10: module-level NumPy import fixes annotation name resolution and PROMISE metric function globals; no metric formula changes."
   },
   {
     "published_file": "tools/train_paper.py",

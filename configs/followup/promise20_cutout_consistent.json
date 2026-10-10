@@ -1,0 +1,102 @@
+{
+  "task_id": "PROMISE20_CUTOUT_CONSISTENT_FOLLOWUP",
+  "dataset": "promise12",
+  "data_subdir": "PROMISE12",
+  "entry": "train_promise12/train_promise12_bcp_fft.py",
+  "recorded_parameters_source": "experiments/three_innovation_ablation_transfer_v22_0/PROMISE20_FINAL3/pre_train/log.txt",
+  "recorded_parameters_source_sha256": "f731625d5240654b63ffffe85cee12b8e82ff9b4ca8c466bcc43b30810d289b1",
+  "training_args": {
+    "exp": "publication_followup/PROMISE20_CUTOUT_CONSISTENT",
+    "model_1": "unet",
+    "model_2": "swin_unet",
+    "max_iterations": 30000,
+    "batch_size": 16,
+    "deterministic": 1,
+    "base_lr": 0.01,
+    "image_size": [
+      224,
+      224
+    ],
+    "seed": 1337,
+    "num_classes": 2,
+    "cache_mode": "part",
+    "amp_opt_level": "O1",
+    "labeled_bs": 8,
+    "labeled_num": 7,
+    "ema_decay": 0.99,
+    "consistency_type": "mse",
+    "consistency": 0.1,
+    "consistency_rampup": 200.0,
+    "u_weight": 0.5,
+    "patch_size": 56,
+    "h_size": 4,
+    "w_size": 4,
+    "top_num": 4,
+    "use_mask_token_prehead_router": true,
+    "mask_token_num": 4,
+    "mask_token_dim": 16,
+    "mask_token_log_interval": 200,
+    "use_adamix_bcp_lite_v1": true,
+    "adamix_bcp_lite_v1_min_side": 0.18,
+    "adamix_bcp_lite_v1_max_side": 0.38,
+    "adamix_bcp_lite_v1_log_interval": 200,
+    "input_mode": "2d",
+    "pretrain_max_iterations_override": 10000,
+    "self_train_max_iterations_override": 30000,
+    "self_train_checkpoint_interval": 5000,
+    "evaluation_policy": "validation_only",
+    "dataset_name": "promise12",
+    "enable_v22_frozen_x03": true,
+    "v22_frozen_x03_id": "V21_3_X03_CONTOUR_RELIABILITY_WEIGHT",
+    "v22_frozen_x03_weight": 0.05,
+    "promise12_strong_view_mode": "cutout_then_jitter"
+  },
+  "output_dir": "outputs/promise20_cutout_consistent",
+  "checkpoint": "outputs/promise20_cutout_consistent/self_train/unet_best_model.pth",
+  "split_root": "splits/promise12",
+  "components": {
+    "TRC": true,
+    "TCSMix": true,
+    "CTW": true
+  },
+  "mixing_control": "teacher all-pixel mean maximum class probability",
+  "selection": {
+    "metric": "validation Dice of student 1",
+    "cadence": 200,
+    "tie_break": "earliest iteration; update only on strict improvement",
+    "test_used": false
+  },
+  "evaluation": {
+    "unit": "grid",
+    "spacing": "none (unit grid)",
+    "post_processing": "none"
+  },
+  "pretrain": {
+    "updates": 10000,
+    "optimizer": "fresh SGD for pretraining; SSL students load its saved optimizer state"
+  },
+  "ssl_updates_per_student": 30000,
+  "labeled_array_indices": "splits/promise12/labeled_array_indices.list",
+  "unlabeled_array_indices_rule": "range(202, len(X_train))",
+  "legacy_case_registry": "splits/promise12/labeled.list",
+  "optimizer": {
+    "name": "SGD",
+    "momentum": 0.9,
+    "weight_decay": 0.0001,
+    "learning_rate": 0.01,
+    "ssl_schedule": "polynomial exponent 0.9",
+    "ssl_initialization": "Both students load net and opt from the validation-selected pretraining checkpoint, including momentum buffers."
+  },
+  "models": {
+    "student_1": "unet",
+    "student_2": "unet",
+    "teacher": "unet",
+    "construction": "All call create_model(), which reads training_args.model_1; recorded model_2=swin_unet is an unused legacy field."
+  },
+  "augmentation": {
+    "strong_view_mode": "cutout_then_jitter",
+    "status": "Unrun follow-up correction: apply color jitter to the cutout image and retain its paired cutout label."
+  },
+  "configuration_origin": "configs/paper/promise20.json; only the 2D strong-view correction and separate run paths/identity differ.",
+  "result_status": "Unrun; no published paper score or historical checkpoint is assigned to this configuration."
+}

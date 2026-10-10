@@ -48,7 +48,8 @@
     "dataset_name": "promise12",
     "enable_v22_frozen_x03": true,
     "v22_frozen_x03_id": "V21_3_X03_CONTOUR_RELIABILITY_WEIGHT",
-    "v22_frozen_x03_weight": 0.05
+    "v22_frozen_x03_weight": 0.05,
+    "promise12_strong_view_mode": "legacy_overwrite"
   },
   "output_dir": "outputs/promise20",
   "checkpoint": "outputs/promise20/self_train/unet_best_model.pth",
@@ -72,7 +73,7 @@
   },
   "pretrain": {
     "updates": 10000,
-    "optimizer": "fresh SGD for each stage"
+    "optimizer": "fresh SGD for pretraining; SSL students load its saved optimizer state"
   },
   "ssl_updates_per_student": 30000,
   "labeled_array_indices": "splits/promise12/labeled_array_indices.list",
@@ -83,11 +84,24 @@
     "momentum": 0.9,
     "weight_decay": 0.0001,
     "learning_rate": 0.01,
-    "ssl_schedule": "polynomial exponent 0.9"
+    "ssl_schedule": "polynomial exponent 0.9",
+    "ssl_initialization": "Both students load net and opt from the validation-selected pretraining checkpoint, including momentum buffers."
   },
   "historical_validation_best": {
     "step": 24400,
     "score": 0.8912,
     "checkpoint_sha256": "89c670b16b9a5b1da3bdd8f8c19094424fceef84398773d0ec27246475a48f2c"
+  },
+  "models": {
+    "student_1": "unet",
+    "student_2": "unet",
+    "teacher": "unet",
+    "construction": "All call create_model(), which reads training_args.model_1; recorded model_2=swin_unet is an unused legacy field."
+  },
+  "augmentation": {
+    "strong_view_mode": "legacy_overwrite",
+    "status": "Compatibility with published release 8fbca8f; the FINAL3 loader dependency was not separately archived.",
+    "known_issue": "Color jitter overwrites the cutout image while the cutout label is retained.",
+    "corrected_followup_config": "configs/followup/promise20_cutout_consistent.json"
   }
 }
