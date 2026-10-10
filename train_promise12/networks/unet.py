@@ -108,10 +108,25 @@ class SpatialMaskTokenRouter(nn.Module):
         self.inverse_project = nn.Conv2d(token_dim, in_channels, kernel_size=1, bias=True)
         self.gamma = nn.Parameter(torch.zeros(1))
         self.scale = token_dim ** -0.5
+        self.active = True
         self.last_stats = {}
         nn.init.normal_(self.tokens, std=0.02)
 
     def forward(self, x):
+        if not self.active:
+            with torch.no_grad():
+                self.last_stats = {
+                    "active": False,
+                    "token_utilization": [],
+                    "routing_entropy": 0.0,
+                    "activation_coverage": 0.0,
+                    "gamma": float(self.gamma.detach().cpu()),
+                    "feature_norm": float(x.norm().detach().cpu()),
+                    "residual_norm": 0.0,
+                    "residual_to_feature_ratio": 0.0,
+                    "finite": bool(torch.isfinite(x).all().detach().cpu()),
+                }
+            return x
         proj = self.project(x)
         proj = self.norm(proj.permute(0, 2, 3, 1)).permute(0, 3, 1, 2)
         logits = torch.einsum("bdhw,nd->bnhw", proj, self.tokens) * self.scale
@@ -127,6 +142,7 @@ class SpatialMaskTokenRouter(nn.Module):
             feature_norm = x.norm().detach()
             residual_norm = residual.norm().detach()
             self.last_stats = {
+                "active": True,
                 "token_utilization": token_utilization,
                 "routing_entropy": float(entropy.detach().cpu()),
                 "activation_coverage": float((max_weight > (1.0 / self.token_num)).float().mean().detach().cpu()),

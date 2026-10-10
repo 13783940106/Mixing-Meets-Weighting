@@ -1,4 +1,6 @@
 import argparse
+import hashlib
+import json
 import logging
 import os
 import random
@@ -29,11 +31,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 from scipy import ndimage
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+from train_ACDC.v21_3_acdc10_third_innovation_components import compute_v21_3_innovation_x
+
 gc.collect()
 torch.cuda.empty_cache()
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+COVID_FORMAL_PRETRAIN_UPDATES = 10000
+COVID_FORMAL_SELF_TRAIN_UPDATES = 30000
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_path', type=str,
-                    default="../AD-MT/code/data_promise12", help='Name of Experiment')
+                    default=os.path.join(os.environ.get("DATA_ROOT", "./data"), "PROMISE12"), help='Name of Experiment')
 parser.add_argument('--exp', type=str,
                     default='train_PROMISE12', help='experiment_name')
 parser.add_argument('--model_1', type=str,
@@ -48,13 +58,13 @@ parser.add_argument('--deterministic', type=int, default=1,
                     help='whether use deterministic training')
 parser.add_argument('--base_lr', type=float, default=0.01,
                     help='segmentation network learning rate')
-parser.add_argument('--image_size', type=list, default=[224, 224],
+parser.add_argument('--image_size', type=int, nargs=2, default=[224, 224],
                     help='patch size of network input')
 parser.add_argument('--seed', type=int, default=1337, help='random seed')
 parser.add_argument('--num_classes', type=int, default=2,
                     help='output channel of network')
 parser.add_argument('--cfg', type=str,
-                    default="./configs/swin_tiny_patch4_window7_224_lite.yaml",
+                    default=os.path.join(SCRIPT_DIR, "configs", "swin_tiny_patch4_window7_224_lite.yaml"),
                     help='path to config file', )
 parser.add_argument("--opts", help="Modify config options by adding 'KEY VALUE' pairs. ",
                     default=None, nargs='+', )
@@ -335,7 +345,44 @@ parser.add_argument('--pretrain_max_iterations_override', type=int, default=None
                     help='engineering smoke/short override for pre-train iterations; default preserves original 10000')
 parser.add_argument('--self_train_max_iterations_override', type=int, default=None,
                     help='engineering smoke/short override for self-train iterations; default uses max_iterations')
+parser.add_argument('--self_train_resume_checkpoint', type=str, default=None,
+                    help='explicit full-state self-train checkpoint to resume')
+parser.add_argument('--self_train_checkpoint_interval', type=int, default=5000,
+                    help='full-state self-train checkpoint interval')
+parser.add_argument('--checkpoint_trace_runtime', action='store_true',
+                    help='record runtime-only checkpoint continuation trace digests')
+parser.add_argument('--evaluation_policy', type=str, default='validation_only',
+                    choices=['validation_only', 'legacy_test_eval'],
+                    help='evaluation lifecycle policy; COVID formal uses validation_only')
+parser.add_argument('--dataset_name', type=str, default='promise12',
+                    choices=['promise12', 'covid19_official20'],
+                    help='dataset binding; COVID formal uses covid19_official20')
+parser.add_argument('--covid19_labeled_manifest', type=str, default=None,
+                    help='COVID19 Official20 labeled training manifest')
+parser.add_argument('--covid19_unlabeled_manifest', type=str, default=None,
+                    help='COVID19 Official20 unlabeled training manifest')
+parser.add_argument('--covid19_val_manifest', type=str, default=None,
+                    help='COVID19 Official20 validation all-slice manifest')
+parser.add_argument('--promise12_slice_indices_json', type=str, default=None,
+                    help='PROMISE12 formal labeled/unlabeled slice-index binding')
+parser.add_argument('--enable_v22_frozen_x03', action='store_true',
+                    help='enable frozen V22 X03 contour reliability loss for Final3 transfer')
+parser.add_argument('--v22_frozen_x03_id', type=str, default='V21_3_X03_CONTOUR_RELIABILITY_WEIGHT',
+                    help='frozen V22 X03 candidate id')
+parser.add_argument('--v22_frozen_x03_weight', type=float, default=0.05,
+                    help='frozen V22 X03 loss weight')
+parser.add_argument('--v22_output_root_override', type=str, default=None,
+                    help='V22 engineering-only output root override; preserves training logic while binding receipts to the formal queue path')
 args = parser.parse_args()
+
+COVID_SELFTRAIN_CHECKPOINT_SCHEMA_VERSION = 1
+
+def sha256_file_for_identity(path):
+    digest = hashlib.sha256()
+    with open(path, 'rb') as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
 config = get_config(args)
 dice_loss = losses.DiceLoss(2)
 
@@ -1500,6 +1547,50 @@ def process_image_batches_for_model(image_batch_a, image_batch_b, threshold):
     swapped_b = image_batch_b - low_b + low_a
     return torch.cat([swapped_a, swapped_b], dim=0)
 
+def should_run_validation(iter_num):
+    if args.dataset_name == 'covid19_official20':
+        return iter_num == 1 or iter_num % 500 == 0
+    return iter_num > 0 and iter_num % 200 == 0
+
+def _batch_scalar(value):
+    if isinstance(value, (list, tuple)):
+        return value[0]
+    if torch.is_tensor(value):
+        value = value.squeeze(0)
+        if value.numel() == 1:
+            return value.item()
+    return value
+
+def _batch_vector(value):
+    if torch.is_tensor(value):
+        return value.squeeze(0).cpu().detach().numpy().tolist()
+    if isinstance(value, np.ndarray):
+        return np.squeeze(value, axis=0).tolist() if value.ndim > 1 else value.tolist()
+    if isinstance(value, (list, tuple)) and len(value) == 1 and torch.is_tensor(value[0]):
+        return value[0].cpu().detach().numpy().tolist()
+    return list(value)
+
+def _predict_covid19_volume_for_model(image, net):
+    image_np = image.squeeze(0).cpu().detach().numpy()
+    prediction = np.zeros(image_np.shape, dtype=np.uint8)
+    for ind in range(image_np.shape[0]):
+        if args.input_mode == '25d_3ch':
+            prev_ind = ind - 1 if ind > 0 else ind
+            next_ind = ind + 1 if ind < image_np.shape[0] - 1 else ind
+            model_input = np.stack(
+                [image_np[prev_ind], image_np[ind], image_np[next_ind]],
+                axis=0,
+            ).astype(np.float32)
+            input_tensor = torch.from_numpy(model_input).unsqueeze(0).float().cuda()
+            input_tensor = prepare_25d_input_for_model(input_tensor, apply_neighbor_policy=False)
+        else:
+            model_input = image_np[ind].astype(np.float32)
+            input_tensor = torch.from_numpy(model_input).unsqueeze(0).unsqueeze(0).float().cuda()
+        with torch.no_grad():
+            out = torch.argmax(torch.softmax(net(input_tensor), dim=1), dim=1).squeeze(0)
+            prediction[ind] = out.cpu().detach().numpy()
+    return prediction
+
 def test_single_volume_promise_for_model(image, label, net, classes):
     if args.input_mode != '25d_3ch':
         return test_single_volume_promise(image, label, net, classes=classes)
@@ -1525,6 +1616,55 @@ def test_single_volume_promise_for_model(image, label, net, classes):
     for i in range(1, classes):
         metric_list.append(calculate_metric_percase(prediction == i, label_np == i))
     return metric_list
+
+def evaluate_loader_for_model(eval_loader, db_eval, net, classes, selection_split_name):
+    if args.dataset_name != 'covid19_official20':
+        metric_list = 0.0
+        for i_batch, sampled_batch in enumerate(eval_loader):
+            metric_i = test_single_volume_promise_for_model(sampled_batch["image"], sampled_batch["mask"], net,
+                                                            classes=classes)
+            metric_list += np.array(metric_i)
+        metric_list = metric_list / len(db_eval)
+        performance = np.mean(metric_list, axis=0)
+        return {
+            "primary": performance,
+            "metric_list": metric_list,
+            "log_message": "%s_mean_dice : %f" % (selection_split_name, performance),
+        }
+
+    root = _project_root_for_covid19()
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from train_COVID19.covid19_volume_evaluator import SlicePrediction, patient_volume_macro
+
+    slices = []
+    for i_batch, sampled_batch in enumerate(eval_loader):
+        prediction = _predict_covid19_volume_for_model(sampled_batch["image"], net)
+        label_np = sampled_batch["mask"].squeeze(0).cpu().detach().numpy()
+        patient_id = str(_batch_scalar(sampled_batch["patient_id"]))
+        slice_indices = [int(item) for item in _batch_vector(sampled_batch["slice_idx"])]
+        spacing = tuple(float(item) for item in _batch_vector(sampled_batch["spacing"]))
+        for local_index, slice_idx in enumerate(slice_indices):
+            slices.append(
+                SlicePrediction(
+                    patient_id=patient_id,
+                    slice_idx=slice_idx,
+                    pred=prediction[local_index] > 0,
+                    gt=label_np[local_index] > 0,
+                    spacing=spacing,
+                )
+            )
+    result = patient_volume_macro(slices)
+    macro = result["macro"]
+    return {
+        "primary": macro["dice"],
+        "metric_list": np.array([macro["dice"]], dtype=np.float64),
+        "covid19_volume_metrics": result,
+        "log_message": (
+            "%s_patient_volume_macro_dice : %f, iou : %f, hd95_mm : %f, asd_mm : %f"
+            % (selection_split_name, macro["dice"], macro["iou"], macro["hd95_mm"], macro["asd_mm"])
+        ),
+    }
 
 def generate_m3hl_mmm_mask(img, mask_ratio=0.5, patch_size=56):
     batch_size, _, img_x, img_y = img.shape
@@ -2103,27 +2243,241 @@ def save_net_opt(net, optimizer, path):
     }
     torch.save(state, str(path))
 
+def capture_training_rng_state():
+    return {
+        'python_random': random.getstate(),
+        'numpy_random': np.random.get_state(),
+        'torch_random': torch.get_rng_state(),
+        'torch_cuda_random_all': torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+    }
+
+def restore_training_rng_state(state):
+    random.setstate(state['python_random'])
+    np.random.set_state(state['numpy_random'])
+    torch.set_rng_state(state['torch_random'].cpu())
+    if torch.cuda.is_available() and state.get('torch_cuda_random_all') is not None:
+        torch.cuda.set_rng_state_all([item.cpu() for item in state['torch_cuda_random_all']])
+
+def atomic_torch_save(payload, path):
+    tmp_path = str(path) + '.tmp'
+    torch.save(payload, tmp_path)
+    torch.load(tmp_path, map_location='cpu')
+    os.replace(tmp_path, str(path))
+
+def covid19_manifest_identity(path):
+    if path is None:
+        return None
+    return sha256_file_for_identity(path)
+
+def tensor_sha256_for_checkpoint_trace(tensor):
+    array = tensor.detach().cpu().contiguous().numpy()
+    digest = hashlib.sha256()
+    digest.update(str(array.dtype).encode('utf-8'))
+    digest.update(str(tuple(array.shape)).encode('utf-8'))
+    digest.update(array.tobytes())
+    return digest.hexdigest()
+
+def promise12_slice_index_identity(path):
+    if path is None:
+        return None
+    return sha256_file_for_identity(path)
+
+def _load_promise12_slice_indices(path):
+    with open(path, 'r', encoding='utf-8') as handle:
+        payload = json.load(handle)
+    if payload.get('schema_version') != 'V18_7_PROMISE12_SLICE_INDEX_BINDING_V1':
+        raise ValueError('invalid PROMISE12 slice-index binding schema')
+    labeled = [int(item) for item in payload.get('labeled_indices', [])]
+    unlabeled = [int(item) for item in payload.get('unlabeled_indices', [])]
+    if not labeled or not unlabeled:
+        raise ValueError('PROMISE12 slice-index binding has empty stream')
+    if set(labeled) & set(unlabeled):
+        raise ValueError('PROMISE12 slice-index binding overlap')
+    return payload, labeled, unlabeled
+
+def gradient_sha256_for_checkpoint_trace(model):
+    digest = hashlib.sha256()
+    for name, param in model.named_parameters():
+        digest.update(name.encode('utf-8'))
+        if param.grad is None:
+            digest.update(b'NONE')
+        else:
+            grad = param.grad.detach().cpu().contiguous().numpy()
+            digest.update(str(grad.dtype).encode('utf-8'))
+            digest.update(str(tuple(grad.shape)).encode('utf-8'))
+            digest.update(grad.tobytes())
+    return digest.hexdigest()
+
+def self_train_lineage_payload(args, pre_trained_model):
+    pretrain_target = args.pretrain_max_iterations_override or COVID_FORMAL_PRETRAIN_UPDATES
+    self_train_target = args.self_train_max_iterations_override or args.max_iterations
+    return {
+        'protocol_identity': 'OFFICIAL20_PATIENTLEVEL_ALLSLICE_V2' if args.dataset_name == 'covid19_official20' else 'LEGACY_PROMISE12',
+        'run_id': args.exp,
+        'dataset_name': args.dataset_name,
+        'labeled_num': args.labeled_num,
+        'pretrain_target_updates': int(pretrain_target),
+        'self_train_target_updates': int(self_train_target),
+        'use_mask_token_prehead_router': bool(args.use_mask_token_prehead_router),
+        'use_adamix_bcp_lite_v1': bool(args.use_adamix_bcp_lite_v1),
+        'training_core_sha256': sha256_file_for_identity(__file__),
+        'pretrain_checkpoint_sha256': sha256_file_for_identity(pre_trained_model),
+        'covid19_labeled_manifest_sha256': covid19_manifest_identity(args.covid19_labeled_manifest),
+        'covid19_unlabeled_manifest_sha256': covid19_manifest_identity(args.covid19_unlabeled_manifest),
+        'covid19_val_manifest_sha256': covid19_manifest_identity(args.covid19_val_manifest),
+        'promise12_slice_indices_sha256': promise12_slice_index_identity(args.promise12_slice_indices_json),
+    }
+
+def save_self_train_full_checkpoint(path, args, pre_trained_model, model1, model2, ema_model, optimizer1, optimizer2, batch_sampler, iter_num, best_performance1, best_performance2, last_update_trace=None):
+    pretrain_target = args.pretrain_max_iterations_override or COVID_FORMAL_PRETRAIN_UPDATES
+    self_train_target = args.self_train_max_iterations_override or args.max_iterations
+    payload = {
+        'schema_version': COVID_SELFTRAIN_CHECKPOINT_SCHEMA_VERSION,
+        'phase': 'SELF_TRAIN',
+        'completed_pretrain_updates': int(pretrain_target),
+        'pretrain_target_updates': int(pretrain_target),
+        'completed_self_train_updates': int(iter_num),
+        'self_train_target_updates': int(self_train_target),
+        'model_states': {
+            'model1': model1.state_dict(),
+            'model2': model2.state_dict(),
+            'ema_model': ema_model.state_dict(),
+        },
+        'optimizer_states': {
+            'optimizer1': optimizer1.state_dict(),
+            'optimizer2': optimizer2.state_dict(),
+        },
+        'scheduler_state': {
+            'type': 'formula_lr_from_completed_self_train_updates',
+            'base_lr': args.base_lr,
+            'max_iterations': int(self_train_target),
+        },
+        'rng_state': capture_training_rng_state(),
+        'sampler_state': batch_sampler.state_dict() if hasattr(batch_sampler, 'state_dict') else None,
+        'method_state': {
+            'mask_token': 'COVERED_BY_MODEL_STATE',
+            'adamix': 'STATELESS_BY_CODE_AUDIT_GLOBAL_NUMPY_RNG_COVERED',
+            'beta_fft_bcp': 'STATELESS_BY_CODE_AUDIT_GLOBAL_NUMPY_RNG_COVERED',
+        },
+        'best_performance1': float(best_performance1),
+        'best_performance2': float(best_performance2),
+        'last_update_trace': last_update_trace,
+        'lineage': self_train_lineage_payload(args, pre_trained_model),
+    }
+    atomic_torch_save(payload, path)
+
+def load_self_train_checkpoint(path, args, pre_trained_model, model1, model2, ema_model, optimizer1, optimizer2, batch_sampler):
+    payload = torch.load(str(path), map_location='cuda' if torch.cuda.is_available() else 'cpu')
+    if payload.get('schema_version') != COVID_SELFTRAIN_CHECKPOINT_SCHEMA_VERSION:
+        raise ValueError('invalid self-train checkpoint schema')
+    if payload.get('phase') != 'SELF_TRAIN':
+        raise ValueError('invalid self-train checkpoint phase')
+    expected_lineage = self_train_lineage_payload(args, pre_trained_model)
+    if payload.get('lineage') != expected_lineage:
+        raise ValueError('RESUME_LINEAGE_GATE_FAIL')
+    expected_pretrain = args.pretrain_max_iterations_override or COVID_FORMAL_PRETRAIN_UPDATES
+    expected_self_train = args.self_train_max_iterations_override or args.max_iterations
+    if payload.get('pretrain_target_updates') != int(expected_pretrain):
+        raise ValueError('RESUME_PRETRAIN_BUDGET_IDENTITY_MISMATCH')
+    if payload.get('self_train_target_updates') != int(expected_self_train):
+        raise ValueError('RESUME_SELF_TRAIN_BUDGET_IDENTITY_MISMATCH')
+    if payload.get('completed_pretrain_updates') != int(expected_pretrain):
+        raise ValueError('RESUME_COMPLETED_PRETRAIN_BUDGET_MISMATCH')
+    for key in ['model1', 'model2', 'ema_model']:
+        if key not in payload.get('model_states', {}):
+            raise ValueError('INCOMPLETE_CHECKPOINT_MODEL_STATE')
+    for key in ['optimizer1', 'optimizer2']:
+        if key not in payload.get('optimizer_states', {}):
+            raise ValueError('INCOMPLETE_CHECKPOINT_OPTIMIZER_STATE')
+    if payload.get('sampler_state') is None:
+        raise ValueError('INCOMPLETE_CHECKPOINT_SAMPLER_STATE')
+    if 'rng_state' not in payload:
+        raise ValueError('INCOMPLETE_CHECKPOINT_RNG_STATE')
+    model1.load_state_dict(payload['model_states']['model1'])
+    model2.load_state_dict(payload['model_states']['model2'])
+    ema_model.load_state_dict(payload['model_states']['ema_model'])
+    optimizer1.load_state_dict(payload['optimizer_states']['optimizer1'])
+    optimizer2.load_state_dict(payload['optimizer_states']['optimizer2'])
+    batch_sampler.load_state_dict(payload['sampler_state'])
+    restore_training_rng_state(payload['rng_state'])
+    return int(payload['completed_self_train_updates']), float(payload['best_performance1']), float(payload['best_performance2'])
+
+def _project_root_for_covid19():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+
+def _require_covid19_manifests(args):
+    required = [
+        args.covid19_labeled_manifest,
+        args.covid19_unlabeled_manifest,
+        args.covid19_val_manifest,
+    ]
+    if any(item is None for item in required):
+        raise ValueError("covid19_official20 requires labeled, unlabeled, and val manifests")
+
+def build_train_dataset_and_sampler(args, batch_size):
+    if args.dataset_name != 'covid19_official20':
+        db_train = Promise12_25D(args.root_path, mode='train', out_size=224) if args.input_mode == '25d_3ch' else Promise12(args.root_path, mode='train', out_size=224)
+        total_slices = len(db_train)
+        if args.promise12_slice_indices_json:
+            _, labeled_idxs, unlabeled_idxs = _load_promise12_slice_indices(args.promise12_slice_indices_json)
+            all_indices = set(labeled_idxs) | set(unlabeled_idxs)
+            if min(all_indices) < 0 or max(all_indices) >= total_slices:
+                raise ValueError('PROMISE12 slice-index binding outside dataset bounds')
+            labeled_slice = len(labeled_idxs)
+        else:
+            labeled_slice = 202
+            labeled_idxs = list(range(0, labeled_slice))
+            unlabeled_idxs = list(range(labeled_slice, total_slices))
+        batch_sampler = TwoStreamBatchSampler(labeled_idxs, unlabeled_idxs, batch_size, batch_size - args.labeled_bs)
+        return db_train, batch_sampler, total_slices, labeled_slice, None
+
+    _require_covid19_manifests(args)
+    root = _project_root_for_covid19()
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from train_COVID19.covid19_dataset_adapter import Covid19Official20TwoStreamDataset, covid19_two_stream_collate
+
+    db_train = Covid19Official20TwoStreamDataset(args.covid19_labeled_manifest, args.covid19_unlabeled_manifest)
+    total_slices = len(db_train)
+    labeled_slice = db_train.labeled_count
+    batch_sampler = TwoStreamBatchSampler(
+        db_train.labeled_indices,
+        db_train.unlabeled_indices,
+        batch_size,
+        batch_size - args.labeled_bs,
+    )
+    return db_train, batch_sampler, total_slices, labeled_slice, covid19_two_stream_collate
+
+def build_validation_dataset(args):
+    if args.dataset_name != 'covid19_official20':
+        return Promise12(args.root_path, mode='val', out_size=224)
+
+    _require_covid19_manifests(args)
+    root = _project_root_for_covid19()
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from train_COVID19.covid19_dataset_adapter import Covid19Official20PatientVolumeDataset
+
+    return Covid19Official20PatientVolumeDataset(args.covid19_val_manifest)
+
 def pre_train(args, snapshot_path):
     base_lr = args.base_lr
     num_classes = args.num_classes
-    max_iterations = args.pretrain_max_iterations_override or 10000
+    max_iterations = args.pretrain_max_iterations_override or COVID_FORMAL_PRETRAIN_UPDATES
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     labeled_sub_bs, unlabeled_sub_bs = int(args.labeled_bs / 2), int((args.batch_size - args.labeled_bs) / 2)
     batch_size = args.batch_size
 
     model = create_model()
+    set_mask_token_router_active(model, False)
 
     def worker_init_fn(worker_id):
         random.seed(args.seed + worker_id)
 
-    db_train = Promise12_25D(args.root_path, mode='train', out_size=224) if args.input_mode == '25d_3ch' else Promise12(args.root_path, mode='train', out_size=224)
-    db_val = Promise12(args.root_path, mode='val', out_size=224)
+    db_train, batch_sampler, total_slices, labeled_slice, collate_fn = build_train_dataset_and_sampler(args, batch_size)
+    db_val = build_validation_dataset(args)
     
-    total_slices = len(db_train)
-    labeled_slice = 202 # 标记的切片数目
     print("Total slices is: {}, labeled slices is:{}".format(total_slices, labeled_slice))
-    labeled_idxs = list(range(0, labeled_slice))
-    unlabeled_idxs = list(range(labeled_slice, total_slices))
     # batch_sampler = TwoStreamBatchSampler(labeled_idxs, unlabeled_idxs, args.batch_size,
     #                                       args.batch_size - args.labeled_bs)
     #
@@ -2132,8 +2486,7 @@ def pre_train(args, snapshot_path):
     #
     # valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=1)
 
-    batch_sampler = TwoStreamBatchSampler(labeled_idxs, unlabeled_idxs, batch_size, batch_size - args.labeled_bs)  # args.labeled_bs=8
-    trainloader = DataLoader(db_train, batch_sampler=batch_sampler, num_workers=0, pin_memory=True, worker_init_fn=worker_init_fn)
+    trainloader = DataLoader(db_train, batch_sampler=batch_sampler, num_workers=0, pin_memory=True, worker_init_fn=worker_init_fn, collate_fn=collate_fn)
     valloader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=0)
 
     optimizer = optim.SGD(model.parameters(), lr=base_lr, momentum=0.9, weight_decay=0.0001)
@@ -2185,18 +2538,16 @@ def pre_train(args, snapshot_path):
 
 
 
-            if iter_num > 0 and iter_num % 200 == 0:
+            if should_run_validation(iter_num):
+                was_training = model.training
                 model.eval()
-                metric_list = 0.0
-                for i_batch, sampled_batch in enumerate(valloader):
-                    metric_i = test_single_volume_promise_for_model(sampled_batch["image"], sampled_batch["mask"], model,
-                                                                    classes=num_classes)
-                    metric_list += np.array(metric_i)
-                metric_list = metric_list / len(db_val)
-
-
-
-                performance = np.mean(metric_list, axis=0)
+                try:
+                    validation_result = evaluate_loader_for_model(valloader, db_val, model, num_classes, "val")
+                finally:
+                    if was_training:
+                        model.train()
+                metric_list = validation_result["metric_list"]
+                performance = validation_result["primary"]
 
                 if performance > best_performance:
                     best_performance = performance
@@ -2207,7 +2558,7 @@ def pre_train(args, snapshot_path):
                     save_net_opt(model, optimizer, save_best_path)
 
                 logging.info('iteration %d : mean_dice : %f' % (iter_num, performance))
-                model.train()
+                logging.info('iteration %d : %s' % (iter_num, validation_result["log_message"]))
 
             if iter_num >= max_iterations:
                 break
@@ -2236,6 +2587,12 @@ def create_model(ema=False):
         for param in model.parameters():
             param.detach_()
     return model
+
+def set_mask_token_router_active(model, active):
+    for module in model.modules():
+        if hasattr(module, "mask_token_router") and getattr(module, "mask_token_router") is not None:
+            setattr(module.mask_token_router, "active", bool(active))
+
 def self_train(args, pre_snapshot_path,snapshot_path):
     base_lr = args.base_lr
     num_classes = args.num_classes
@@ -2249,6 +2606,9 @@ def self_train(args, pre_snapshot_path,snapshot_path):
     model1 = create_model()
     model2 = create_model()
     ema_model = create_model()
+    set_mask_token_router_active(model1, True)
+    set_mask_token_router_active(model2, True)
+    set_mask_token_router_active(ema_model, True)
 
     # model2 = ViT_seg(config, img_size=args.image_size, num_classes=args.num_classes).cuda()
     # model2.load_from(config)
@@ -2257,22 +2617,22 @@ def self_train(args, pre_snapshot_path,snapshot_path):
     def worker_init_fn(worker_id):
         random.seed(args.seed + worker_id)
 
-    db_train = Promise12_25D(args.root_path, mode='train', out_size=224) if args.input_mode == '25d_3ch' else Promise12(args.root_path, mode='train', out_size=224)
-    db_val = Promise12(args.root_path, mode='val', out_size=224)
-    db_test = Promise12(args.root_path, mode='test', out_size=224)
+    db_train, batch_sampler, total_slices, labeled_slice, collate_fn = build_train_dataset_and_sampler(args, batch_size)
+    db_val = build_validation_dataset(args)
+    selection_split_name = 'val'
+    db_test = None
+    test_loader = None
+    if args.evaluation_policy == 'legacy_test_eval':
+        db_test = Promise12(args.root_path, mode='test', out_size=224)
 
-    total_slices = len(db_train)
-    labeled_slice = 202  # args.labeled_num=7
     print("Total silices is: {}, labeled slices is: {}".format(total_slices, labeled_slice))
 
-    labeled_idxs = list(range(0, labeled_slice))
-    unlabeled_idxs = list(range(labeled_slice, total_slices))
-    batch_sampler = TwoStreamBatchSampler(labeled_idxs, unlabeled_idxs, batch_size, batch_size - args.labeled_bs)  # args.labeled_bs=8
-    trainloader = DataLoader(db_train, batch_sampler=batch_sampler, num_workers=0, pin_memory=True, worker_init_fn=worker_init_fn)
-    loader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=0)
+    trainloader = DataLoader(db_train, batch_sampler=batch_sampler, num_workers=0, pin_memory=True, worker_init_fn=worker_init_fn, collate_fn=collate_fn)
+    selection_loader = DataLoader(db_val, batch_size=1, shuffle=False, num_workers=0)
     
     
-    test_loader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=0)
+    if args.evaluation_policy == 'legacy_test_eval':
+        test_loader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=0)
 
     model1.train()
     model2.train()
@@ -2296,13 +2656,43 @@ def self_train(args, pre_snapshot_path,snapshot_path):
 
     best_performance1 = 0.0
     best_performance2 = 0.0
+    last_update_trace = None
+    resume_torch_rng_state_after_restore = None
+    if args.self_train_resume_checkpoint is not None:
+        iter_num, best_performance1, best_performance2 = load_self_train_checkpoint(
+            args.self_train_resume_checkpoint,
+            args,
+            pre_trained_model,
+            model1,
+            model2,
+            ema_model,
+            optimizer1,
+            optimizer2,
+            batch_sampler,
+        )
+        resume_torch_rng_state_after_restore = torch.get_rng_state()
+        logging.info("Resumed self-train from {} at completed update {}".format(args.self_train_resume_checkpoint, iter_num))
     iterator = tqdm(range(max_epoch), ncols=70)  #
 
     for epoch_num in iterator:
-        for i_batch, sampled_batch in enumerate(trainloader):
+        trainloader_iterator = iter(trainloader)
+        if resume_torch_rng_state_after_restore is not None:
+            torch.set_rng_state(resume_torch_rng_state_after_restore.cpu())
+            resume_torch_rng_state_after_restore = None
+        for i_batch, sampled_batch in enumerate(trainloader_iterator):
 
             volume_batch, label_batch = sampled_batch['image'], sampled_batch['mask']
             volume_batch_strong, label_batch_strong = sampled_batch['image_strong'], sampled_batch['mask_strong']
+            checkpoint_trace = None
+            if args.checkpoint_trace_runtime:
+                checkpoint_trace = {
+                    'completed_update_after_step': int(iter_num) + 1,
+                    'sample_ids': list(sampled_batch.get('sample_id', [])),
+                    'input_sha256': tensor_sha256_for_checkpoint_trace(volume_batch),
+                    'input_strong_sha256': tensor_sha256_for_checkpoint_trace(volume_batch_strong),
+                    'lr_before_step_optimizer1': float(optimizer1.param_groups[0]['lr']),
+                    'lr_before_step_optimizer2': float(optimizer2.param_groups[0]['lr']),
+                }
             volume_batch, label_batch = volume_batch.cuda(), label_batch.cuda()
             volume_batch_strong, label_batch_strong = volume_batch_strong.cuda(), label_batch_strong.cuda()
             labeled_volume_batch = volume_batch[:args.labeled_bs]
@@ -2941,10 +3331,46 @@ def self_train(args, pre_snapshot_path,snapshot_path):
                     logging.info('iteration %d : m3hl_mmm_enabled : True, m3hl_mmm_loss : %f, m3hl_mmm_mask_mean : %f, m3hl_mmm_finite : %s' %
                                  (iter_num, m3hl_mmm_loss.detach().item(), m3hl_mask_mean.detach().item(), str(m3hl_finite)))
 
+            v22_frozen_x03_loss = loss.new_tensor(0.0)
+            v22_frozen_x03_endpoint = None
+            if args.enable_v22_frozen_x03:
+                v22_frozen_x03_loss, v22_frozen_x03_endpoint = compute_v21_3_innovation_x(
+                    args.v22_frozen_x03_id,
+                    out_1,
+                    out_2,
+                    pre_a,
+                    pre_b,
+                    image_output_1,
+                    image_output_2,
+                    iter_num,
+                    max_iterations,
+                )
+                loss = loss + args.v22_frozen_x03_weight * v22_frozen_x03_loss
+                if iter_num > 0 and iter_num % args.mask_token_log_interval == 0:
+                    payload = dict(v22_frozen_x03_endpoint or {})
+                    payload["candidate_id"] = args.v22_frozen_x03_id
+                    payload["innovation_x_loss"] = float(v22_frozen_x03_loss.detach().cpu())
+                    payload["weighted_innovation_x_loss"] = float((args.v22_frozen_x03_weight * v22_frozen_x03_loss).detach().cpu())
+                    payload["finite"] = bool(torch.isfinite(v22_frozen_x03_loss).detach().cpu().item())
+                    logging.info("iteration %d : v22_frozen_x03_endpoint=%s", iter_num, json.dumps(payload, sort_keys=True))
+
             optimizer1.zero_grad()
             optimizer2.zero_grad()
 
             loss.backward()
+            if checkpoint_trace is not None:
+                checkpoint_trace.update({
+                    'loss': float(loss.detach().cpu()),
+                    'loss_1': float(loss_1.detach().cpu()),
+                    'loss_2': float(loss_2.detach().cpu()),
+                    'out_1_sha256': tensor_sha256_for_checkpoint_trace(out_1),
+                    'out_2_sha256': tensor_sha256_for_checkpoint_trace(out_2),
+                    'ict_outputs_sha256': tensor_sha256_for_checkpoint_trace(outputs),
+                    'fft_output_1_sha256': tensor_sha256_for_checkpoint_trace(image_output_1),
+                    'fft_output_2_sha256': tensor_sha256_for_checkpoint_trace(image_output_2),
+                    'model1_gradient_sha256': gradient_sha256_for_checkpoint_trace(model1),
+                    'model2_gradient_sha256': gradient_sha256_for_checkpoint_trace(model2),
+                })
             optimizer1.step()
             optimizer2.step()
 
@@ -2957,10 +3383,50 @@ def self_train(args, pre_snapshot_path,snapshot_path):
     
 
             update_model_ema(model1, ema_model, 0.99)
+            if checkpoint_trace is not None:
+                checkpoint_trace.update({
+                    'lr_after_step_optimizer1': float(optimizer1.param_groups[0]['lr']),
+                    'lr_after_step_optimizer2': float(optimizer2.param_groups[0]['lr']),
+                })
+                last_update_trace = checkpoint_trace
             
 
 
             logging.info('iteration %d: loss: %f, model1_loss: %f, model2_loss: %f' % (iter_num, loss, loss_1, loss_2))
+            if args.self_train_checkpoint_interval and iter_num > 0 and iter_num % args.self_train_checkpoint_interval == 0:
+                full_checkpoint_path = os.path.join(snapshot_path, 'self_train_full_state_iter_{}.pth'.format(iter_num))
+                latest_checkpoint_path = os.path.join(snapshot_path, 'self_train_full_state_latest.pth')
+                save_self_train_full_checkpoint(
+                    full_checkpoint_path,
+                    args,
+                    pre_trained_model,
+                    model1,
+                    model2,
+                    ema_model,
+                    optimizer1,
+                    optimizer2,
+                    batch_sampler,
+                    iter_num,
+                    best_performance1,
+                    best_performance2,
+                    last_update_trace,
+                )
+                save_self_train_full_checkpoint(
+                    latest_checkpoint_path,
+                    args,
+                    pre_trained_model,
+                    model1,
+                    model2,
+                    ema_model,
+                    optimizer1,
+                    optimizer2,
+                    batch_sampler,
+                    iter_num,
+                    best_performance1,
+                    best_performance2,
+                    last_update_trace,
+                )
+                logging.info('self-train full-state checkpoint saved: %s' % latest_checkpoint_path)
             if args.use_mask_token_prehead_router and iter_num % args.mask_token_log_interval == 0:
                 log_mask_token_router_stats(model1, "model1", iter_num)
                 log_mask_token_router_stats(model2, "model2", iter_num)
@@ -3045,15 +3511,17 @@ def self_train(args, pre_snapshot_path,snapshot_path):
 	            
             # logging.info('iteration %d: loss: %f, mix_dice: %f, mix_ce: %f'%(iter_num, loss, loss_dice, loss_ce))
              
-            if iter_num > 0 and iter_num % 200 == 0:
+            if should_run_validation(iter_num):
+                was_training = model1.training
                 model1.eval()
-                metric_list = 0.0
-                for i_batch, sampled_batch in enumerate(loader):
-                    metric_i = test_single_volume_promise_for_model(sampled_batch["image"], sampled_batch["mask"], model1, classes=num_classes)
-                    metric_list += np.array(metric_i)
-                metric_list = metric_list / len(db_val)
-                writer.add_scalar('info/model1_val_{}_dice'.format(1),metric_list[0], iter_num)
-                performance1 = np.mean(metric_list, axis=0)
+                try:
+                    validation_result = evaluate_loader_for_model(selection_loader, db_val, model1, num_classes, selection_split_name)
+                finally:
+                    if was_training:
+                        model1.train()
+                metric_list = validation_result["metric_list"]
+                writer.add_scalar('info/model1_{}_{}_dice'.format(selection_split_name, 1),metric_list[0], iter_num)
+                performance1 = validation_result["primary"]
                 if performance1 > best_performance1:
                     best_performance1 = performance1
                     save_mode_path = os.path.join(snapshot_path,'model1_iter_{}_dice_{}.pth'.format(iter_num, round(best_performance1, 4)))
@@ -3062,16 +3530,19 @@ def self_train(args, pre_snapshot_path,snapshot_path):
                     torch.save(model1.state_dict(), save_best)
 
                 logging.info('iteration %d : model1_mean_dice : %f' % (iter_num, performance1))
-                metric_list = 0.0
-                for i_batch, sampled_batch in enumerate(test_loader):
-                    metric_i = test_single_volume_promise_for_model(sampled_batch["image"], sampled_batch["mask"], model1, classes=num_classes)
-                    metric_list += np.array(metric_i)
-                metric_list = metric_list / len(db_test)
-                writer.add_scalar('info/model1_test_{}_dice'.format(1),metric_list[0], iter_num)
-                performance1_test = np.mean(metric_list, axis=0)
-                
-                logging.info('iteration %d : model1_mean_test_dice : %f' % (iter_num, performance1_test))
-                model1.train()
+                logging.info('iteration %d : %s' % (iter_num, validation_result["log_message"]))
+                if args.evaluation_policy == 'legacy_test_eval':
+                    metric_list = 0.0
+                    for i_batch, sampled_batch in enumerate(test_loader):
+                        metric_i = test_single_volume_promise_for_model(sampled_batch["image"], sampled_batch["mask"], model1, classes=num_classes)
+                        metric_list += np.array(metric_i)
+                    metric_list = metric_list / len(db_test)
+                    writer.add_scalar('info/model1_test_{}_dice'.format(1),metric_list[0], iter_num)
+                    performance1_test = np.mean(metric_list, axis=0)
+
+                    logging.info('iteration %d : model1_mean_test_dice : %f' % (iter_num, performance1_test))
+                    if was_training:
+                        model1.train()
 
                 # model2.eval()
                 # metric_list = 0.0
@@ -3100,6 +3571,21 @@ def self_train(args, pre_snapshot_path,snapshot_path):
     final_alias_path = os.path.join(snapshot_path, '{}_final_model.pth'.format(args.model_1))
     torch.save(model1.state_dict(), final_model_path)
     torch.save(model1.state_dict(), final_alias_path)
+    save_self_train_full_checkpoint(
+        os.path.join(snapshot_path, 'self_train_full_state_final.pth'),
+        args,
+        pre_trained_model,
+        model1,
+        model2,
+        ema_model,
+        optimizer1,
+        optimizer2,
+        batch_sampler,
+        iter_num,
+        best_performance1,
+        best_performance2,
+        last_update_trace,
+    )
     logging.info('self-train final checkpoint saved: %s' % final_model_path)
     logging.info('self-train final checkpoint alias saved: %s' % final_alias_path)
     writer.close()
@@ -3117,8 +3603,13 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
-    pre_snapshot_path = "./beta_FFT/PROMISE12_bcp_{}_{}/pre_train".format(args.exp, args.labeled_num)
-    snapshot_path = "./beta_FFT/PROMISE12_bcp_fft_test_seed_{}_{}/self_train".format(args.exp, args.labeled_num)
+    if args.v22_output_root_override:
+        v22_output_root = os.path.abspath(args.v22_output_root_override)
+        pre_snapshot_path = os.path.join(v22_output_root, "pre_train")
+        snapshot_path = os.path.join(v22_output_root, "self_train")
+    else:
+        pre_snapshot_path = os.path.join(SCRIPT_DIR, "beta_FFT", "PROMISE12_bcp_{}_{}/pre_train".format(args.exp, args.labeled_num))
+        snapshot_path = os.path.join(SCRIPT_DIR, "beta_FFT", "PROMISE12_bcp_fft_test_seed_{}_{}/self_train".format(args.exp, args.labeled_num))
     if not os.path.exists(pre_snapshot_path):
         os.makedirs(pre_snapshot_path)
 
@@ -3131,12 +3622,15 @@ if __name__ == "__main__":
     if not os.path.exists(snapshot_path):
         os.makedirs(snapshot_path,exist_ok=True)
 
-    shutil.copy('./train_promise12_bcp_fft.py', snapshot_path)
+    shutil.copy(os.path.join(SCRIPT_DIR, 'train_promise12_bcp_fft.py'), snapshot_path)
     logging.basicConfig(filename=pre_snapshot_path + "/log.txt", level=logging.INFO,
                         format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logging.info(str(args))
-    pre_train(args, pre_snapshot_path)
+    if args.self_train_resume_checkpoint is None:
+        pre_train(args, pre_snapshot_path)
+    else:
+        logging.info('Skipping pre_train because explicit self-train resume checkpoint was provided')
 
 
     logging.basicConfig(filename=snapshot_path + "/log.txt", level=logging.DEBUG, format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')

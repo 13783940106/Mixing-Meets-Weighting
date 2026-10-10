@@ -1,0 +1,17 @@
+# Core packages recorded in beta_fft; install torch/torchvision separately.
+numpy==2.2.6
+scipy==1.15.3
+h5py==3.16.0
+MedPy==0.5.2
+scikit-image==0.25.2
+SimpleITK==2.5.5
+nibabel==5.4.2
+tensorboardX==2.6.5
+tqdm==4.68.2
+matplotlib==3.10.9
+pillow==12.2.0
+opencv-python==4.13.0.92
+timm==1.0.27
+einops==0.8.2
+yacs==0.1.8
+PyYAML==6.0.3

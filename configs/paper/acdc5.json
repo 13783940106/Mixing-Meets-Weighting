@@ -1,0 +1,86 @@
+{
+  "task_id": "ACDC5_FINAL3",
+  "dataset": "acdc",
+  "data_subdir": "ACDC",
+  "entry": "train_ACDC/v21_3_acdc10_third_innovation_transfer.py",
+  "recorded_parameters_source": "experiments/three_innovation_ablation_transfer_v22_0/ACDC5_FINAL3/train.log",
+  "recorded_parameters_source_sha256": "a6beb2b1262c8750a52721eb2ed6731157190d5f5a3d8f7fe02c4ccb442089b1",
+  "training_args": {
+    "exp": "beta_fft_acdc_official_10pct_seed42",
+    "model": "unet",
+    "pre_iterations": 10000,
+    "max_iterations": 30000,
+    "batch_size": 24,
+    "deterministic": 1,
+    "base_lr": 0.01,
+    "image_size": [
+      256,
+      256
+    ],
+    "seed": 1337,
+    "num_classes": 4,
+    "labeled_bs": 12,
+    "labelnum": 3,
+    "u_weight": 0.5,
+    "consistency": 0.1,
+    "consistency_rampup": 200.0,
+    "magnitude": 6.0,
+    "s_param": 6,
+    "patch_size": 64,
+    "h_size": 4,
+    "w_size": 4,
+    "top_num": 4,
+    "data_manifest_name": "official",
+    "save_interval": 200,
+    "mask_token_enabled": true,
+    "adamix_enabled": true,
+    "mask_token_num": 4,
+    "mask_token_dim": 16,
+    "adamix_min_side": 0.18,
+    "adamix_max_side": 0.38,
+    "mechanism_log_interval": 200,
+    "innovation_x_id": "V21_3_X03_CONTOUR_RELIABILITY_WEIGHT",
+    "enable_v21_3_innovation_x": true,
+    "v21_3_innovation_x_weight": 0.05
+  },
+  "output_dir": "outputs/acdc5",
+  "checkpoint": "outputs/acdc5/checkpoints/best.ckpt",
+  "split_root": "splits/acdc",
+  "components": {
+    "TRC": true,
+    "TCSMix": true,
+    "CTW": true
+  },
+  "mixing_control": "teacher all-pixel mean maximum class probability",
+  "selection": {
+    "metric": "validation Dice of student 1",
+    "cadence": 200,
+    "tie_break": "earliest iteration; update only on strict improvement",
+    "test_used": false
+  },
+  "evaluation": {
+    "unit": "grid",
+    "spacing": "none (unit grid)",
+    "post_processing": "none"
+  },
+  "pretrain": {
+    "initialization": "label3",
+    "actual_generation_updates": null,
+    "note": "existing label3/label7 required; pre_iterations is a parsed legacy field, not generation evidence",
+    "initialization_sha256": "3486fd3aecf5f30e77e7e15bec0841f56c87db6246a6dc50cc4dc6f2ee2087e0"
+  },
+  "ssl_updates_per_student": 30000,
+  "initialization_dir": "weights/label3",
+  "optimizer": {
+    "name": "SGD",
+    "momentum": 0.9,
+    "weight_decay": 0.0001,
+    "learning_rate": 0.01,
+    "ssl_schedule": "constant; inherits parent optimizer state"
+  },
+  "historical_validation_best": {
+    "step": 28400,
+    "score": 0.8892521589382639,
+    "checkpoint_sha256": "c4df306669f808ad46bed98b666c8e039fe61a5a92d9634255db396892e0bdf3"
+  }
+}

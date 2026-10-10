@@ -1,0 +1,524 @@
+{
+  "patients": [
+    {
+      "patient_id": "coronacases_001",
+      "image_shape": [
+        512,
+        512,
+        301
+      ],
+      "image_spacing": [
+        0.8105469942092896,
+        0.8105469942092896,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 301,
+      "image_path": "images/coronacases_001.nii.gz",
+      "mask_path": "infection_masks/coronacases_001.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_002",
+      "image_shape": [
+        512,
+        512,
+        200
+      ],
+      "image_spacing": [
+        0.68359375,
+        0.68359375,
+        1.5
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 200,
+      "image_path": "images/coronacases_002.nii.gz",
+      "mask_path": "infection_masks/coronacases_002.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_003",
+      "image_shape": [
+        512,
+        512,
+        200
+      ],
+      "image_spacing": [
+        0.736328125,
+        0.736328125,
+        1.5
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 200,
+      "image_path": "images/coronacases_003.nii.gz",
+      "mask_path": "infection_masks/coronacases_003.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_004",
+      "image_shape": [
+        512,
+        512,
+        270
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 270,
+      "image_path": "images/coronacases_004.nii.gz",
+      "mask_path": "infection_masks/coronacases_004.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_005",
+      "image_shape": [
+        512,
+        512,
+        290
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 290,
+      "image_path": "images/coronacases_005.nii.gz",
+      "mask_path": "infection_masks/coronacases_005.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_006",
+      "image_shape": [
+        512,
+        512,
+        213
+      ],
+      "image_spacing": [
+        0.759765625,
+        0.759765625,
+        1.5
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 213,
+      "image_path": "images/coronacases_006.nii.gz",
+      "mask_path": "infection_masks/coronacases_006.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_007",
+      "image_shape": [
+        512,
+        512,
+        249
+      ],
+      "image_spacing": [
+        0.712890625,
+        0.712890625,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 249,
+      "image_path": "images/coronacases_007.nii.gz",
+      "mask_path": "infection_masks/coronacases_007.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_008",
+      "image_shape": [
+        512,
+        512,
+        301
+      ],
+      "image_spacing": [
+        0.7246090173721313,
+        0.7246090173721313,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 301,
+      "image_path": "images/coronacases_008.nii.gz",
+      "mask_path": "infection_masks/coronacases_008.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_009",
+      "image_shape": [
+        512,
+        512,
+        256
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 256,
+      "image_path": "images/coronacases_009.nii.gz",
+      "mask_path": "infection_masks/coronacases_009.nii.gz"
+    },
+    {
+      "patient_id": "coronacases_010",
+      "image_shape": [
+        512,
+        512,
+        301
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 301,
+      "image_path": "images/coronacases_010.nii.gz",
+      "mask_path": "infection_masks/coronacases_010.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_10_85902_1",
+      "image_shape": [
+        630,
+        630,
+        39
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        6.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 39,
+      "image_path": "images/radiopaedia_10_85902_1.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_10_85902_1.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_10_85902_3",
+      "image_shape": [
+        630,
+        630,
+        418
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        1.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 418,
+      "image_path": "images/radiopaedia_10_85902_3.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_10_85902_3.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_14_85914_0",
+      "image_shape": [
+        630,
+        401,
+        110
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        2.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 110,
+      "image_path": "images/radiopaedia_14_85914_0.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_14_85914_0.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_27_86410_0",
+      "image_shape": [
+        630,
+        630,
+        66
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        6.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 66,
+      "image_path": "images/radiopaedia_27_86410_0.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_27_86410_0.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_29_86490_1",
+      "image_shape": [
+        630,
+        630,
+        42
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        6.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 42,
+      "image_path": "images/radiopaedia_29_86490_1.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_29_86490_1.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_29_86491_1",
+      "image_shape": [
+        630,
+        630,
+        42
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        6.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 42,
+      "image_path": "images/radiopaedia_29_86491_1.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_29_86491_1.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_36_86526_0",
+      "image_shape": [
+        630,
+        630,
+        45
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        6.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 45,
+      "image_path": "images/radiopaedia_36_86526_0.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_36_86526_0.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_40_86625_0",
+      "image_shape": [
+        630,
+        630,
+        93
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        4.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 93,
+      "image_path": "images/radiopaedia_40_86625_0.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_40_86625_0.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_4_85506_1",
+      "image_shape": [
+        630,
+        630,
+        39
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        6.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 39,
+      "image_path": "images/radiopaedia_4_85506_1.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_4_85506_1.nii.gz"
+    },
+    {
+      "patient_id": "radiopaedia_7_85703_0",
+      "image_shape": [
+        630,
+        630,
+        45
+      ],
+      "image_spacing": [
+        0.6835939884185791,
+        0.6835939884185791,
+        6.0
+      ],
+      "image_axcodes": [
+        "L",
+        "A",
+        "S"
+      ],
+      "canonical_mask_axcodes": [
+        "R",
+        "A",
+        "S"
+      ],
+      "canonical_axial_slices": 45,
+      "image_path": "images/radiopaedia_7_85703_0.nii.gz",
+      "mask_path": "infection_masks/radiopaedia_7_85703_0.nii.gz"
+    }
+  ]
+}

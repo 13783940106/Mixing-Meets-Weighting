@@ -1,0 +1,97 @@
+{
+  "task_id": "COVID5_FINAL3",
+  "dataset": "covid19",
+  "data_subdir": "COVID19_OFFICIAL20",
+  "entry": "train_promise12/train_promise12_bcp_fft.py",
+  "recorded_parameters_source": "experiments/three_innovation_ablation_transfer_v22_0/COVID5_FINAL3/pre_train/log.txt",
+  "recorded_parameters_source_sha256": "eda0679472bb66be5aa6469e41bd56a47952302f4724e11177024dbb6937335b",
+  "training_args": {
+    "exp": "three_innovation_ablation_transfer_v22_0/COVID5_FINAL3",
+    "model_1": "unet",
+    "model_2": "swin_unet",
+    "max_iterations": 30000,
+    "batch_size": 24,
+    "deterministic": 1,
+    "base_lr": 0.01,
+    "image_size": [
+      224,
+      224
+    ],
+    "seed": 1337,
+    "num_classes": 2,
+    "cache_mode": "part",
+    "amp_opt_level": "O1",
+    "labeled_bs": 12,
+    "labeled_num": 120,
+    "ema_decay": 0.99,
+    "consistency_type": "mse",
+    "consistency": 0.1,
+    "consistency_rampup": 200.0,
+    "u_weight": 0.5,
+    "patch_size": 56,
+    "h_size": 4,
+    "w_size": 4,
+    "top_num": 4,
+    "use_mask_token_prehead_router": true,
+    "mask_token_num": 4,
+    "mask_token_dim": 16,
+    "mask_token_log_interval": 200,
+    "use_adamix_bcp_lite_v1": true,
+    "adamix_bcp_lite_v1_min_side": 0.18,
+    "adamix_bcp_lite_v1_max_side": 0.38,
+    "adamix_bcp_lite_v1_log_interval": 200,
+    "input_mode": "2d",
+    "pretrain_max_iterations_override": 10000,
+    "self_train_max_iterations_override": 30000,
+    "self_train_checkpoint_interval": 5000,
+    "evaluation_policy": "validation_only",
+    "dataset_name": "covid19_official20",
+    "enable_v22_frozen_x03": true,
+    "v22_frozen_x03_id": "V21_3_X03_CONTOUR_RELIABILITY_WEIGHT",
+    "v22_frozen_x03_weight": 0.05
+  },
+  "output_dir": "outputs/covid5",
+  "checkpoint": "outputs/covid5/self_train/unet_best_model.pth",
+  "split_root": "splits/covid19",
+  "components": {
+    "TRC": true,
+    "TCSMix": true,
+    "CTW": true
+  },
+  "mixing_control": "teacher all-pixel mean maximum class probability",
+  "selection": {
+    "metric": "validation Dice of student 1",
+    "cadence": "step 1, then every 500 steps",
+    "tie_break": "earliest iteration; update only on strict improvement",
+    "test_used": false
+  },
+  "evaluation": {
+    "unit": "mm",
+    "spacing": "stored original canonical spacing on the resized derived grid, retained historical evaluator",
+    "post_processing": "none"
+  },
+  "pretrain": {
+    "updates": 10000,
+    "optimizer": "fresh SGD for each stage"
+  },
+  "ssl_updates_per_student": 30000,
+  "manifests": {
+    "labeled": "splits/covid19/COVID19_5P_LABELED.tsv",
+    "unlabeled": "splits/covid19/COVID19_5P_UNLABELED.tsv",
+    "val": "splits/covid19/VAL_ALL_SLICES.tsv",
+    "test": "splits/covid19/TEST_ALL_SLICES.tsv"
+  },
+  "split_seed": 42,
+  "optimizer": {
+    "name": "SGD",
+    "momentum": 0.9,
+    "weight_decay": 0.0001,
+    "learning_rate": 0.01,
+    "ssl_schedule": "polynomial exponent 0.9"
+  },
+  "historical_validation_best": {
+    "step": 22500,
+    "score": 0.8322,
+    "checkpoint_sha256": "b8a0a5eeeefc3b816afcf73fbba16dbc29e9e3c76936a03300fc6bc430cb196b"
+  }
+}

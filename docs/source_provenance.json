@@ -1,0 +1,223 @@
+[
+  {
+    "published_file": "train_ACDC/v21_3_acdc10_third_innovation_transfer.py",
+    "source_path": "train_ACDC/v21_3_acdc10_third_innovation_transfer.py",
+    "source_sha256": "dbf29b2ae055e88e802e1edd6bc559748fafa64966dcb1557ba64aa302ac5c15",
+    "source_status": "existing implementation",
+    "published_sha256": "dbf29b2ae055e88e802e1edd6bc559748fafa64966dcb1557ba64aa302ac5c15"
+  },
+  {
+    "published_file": "train_ACDC/v21_3_acdc10_third_innovation_components.py",
+    "source_path": "train_ACDC/v21_3_acdc10_third_innovation_components.py",
+    "source_sha256": "f28abc48fedff330f9aa7470072ebc16a607c6c59fd14942c2adb111b8ce748a",
+    "source_status": "existing implementation",
+    "published_sha256": "f28abc48fedff330f9aa7470072ebc16a607c6c59fd14942c2adb111b8ce748a"
+  },
+  {
+    "published_file": "train_ACDC/v14_acdc_mask_adamix_transfer.py",
+    "source_path": "train_ACDC/v14_acdc_mask_adamix_transfer.py",
+    "source_sha256": "8cac120e030a5f21f0e9a827b60e3a6ecd0dae2d5df81c7bbcaf8016de6040e0",
+    "source_status": "current dependency copy",
+    "published_sha256": "8cac120e030a5f21f0e9a827b60e3a6ecd0dae2d5df81c7bbcaf8016de6040e0"
+  },
+  {
+    "published_file": "train_ACDC/v14_mask_adamix_components.py",
+    "source_path": "train_ACDC/v14_mask_adamix_components.py",
+    "source_sha256": "75754fa75e6fd6fc01c97682262895998799c7ce3c0bc2dcbe058ef4c63dcaee",
+    "source_status": "current dependency copy",
+    "published_sha256": "75754fa75e6fd6fc01c97682262895998799c7ce3c0bc2dcbe058ef4c63dcaee"
+  },
+  {
+    "published_file": "train_ACDC/beta_fft_acdc_repro.py.bak_clean_split_minimal",
+    "source_path": "train_ACDC/beta_fft_acdc_repro.py.bak_clean_split_minimal",
+    "source_sha256": "16aa2c9f4030e17e0300c33731938d8bc3f2cb76a3e7ff46e1e407a42cc0dbe7",
+    "source_status": "current dependency copy",
+    "published_sha256": "16aa2c9f4030e17e0300c33731938d8bc3f2cb76a3e7ff46e1e407a42cc0dbe7"
+  },
+  {
+    "published_file": "train_ACDC/dataloaders/dataset.py",
+    "source_path": "train_ACDC/dataloaders/dataset.py",
+    "source_sha256": "0ee048bd93cda8cbea35c06755e855d9a1540a57077efa6b541b69945b22bd58",
+    "source_status": "current dependency copy",
+    "published_sha256": "0ee048bd93cda8cbea35c06755e855d9a1540a57077efa6b541b69945b22bd58"
+  },
+  {
+    "published_file": "train_ACDC/networks/net_factory.py",
+    "source_path": "train_ACDC/networks/net_factory.py",
+    "source_sha256": "4eab3d08ab7b201f55185edf78b8ce3a56f14a84750c036d0fc2ee45f2f2089f",
+    "source_status": "current dependency copy",
+    "published_sha256": "4eab3d08ab7b201f55185edf78b8ce3a56f14a84750c036d0fc2ee45f2f2089f"
+  },
+  {
+    "published_file": "train_ACDC/networks/unet.py",
+    "source_path": "train_ACDC/networks/unet.py",
+    "source_sha256": "d5d3b2c826fbb9e5051eaac51b762c139f68367b3bf06e7b7f23d30abba51426",
+    "source_status": "current dependency copy",
+    "published_sha256": "d5d3b2c826fbb9e5051eaac51b762c139f68367b3bf06e7b7f23d30abba51426"
+  },
+  {
+    "published_file": "train_ACDC/utils/losses.py",
+    "source_path": "train_ACDC/utils/losses.py",
+    "source_sha256": "06f3ef39004df0a70e116c783297ae2012ca7cd61de682fcdf964bbd32fcd480",
+    "source_status": "current dependency copy",
+    "published_sha256": "06f3ef39004df0a70e116c783297ae2012ca7cd61de682fcdf964bbd32fcd480"
+  },
+  {
+    "published_file": "train_ACDC/utils/ramps.py",
+    "source_path": "train_ACDC/utils/ramps.py",
+    "source_sha256": "272621382935891d236b5d951e3a3a7e6fe3f4d7913fd9eed4b7d47194322862",
+    "source_status": "current dependency copy",
+    "published_sha256": "272621382935891d236b5d951e3a3a7e6fe3f4d7913fd9eed4b7d47194322862"
+  },
+  {
+    "published_file": "train_ACDC/val_2D.py",
+    "source_path": "train_ACDC/val_2D.py",
+    "source_sha256": "8724f0ce4d3497f29415055ffd7f575bc0943d448705fd53a660ba9089ad70b4",
+    "source_status": "current dependency copy",
+    "published_sha256": "8724f0ce4d3497f29415055ffd7f575bc0943d448705fd53a660ba9089ad70b4"
+  },
+  {
+    "published_file": "train_COVID19/covid19_dataset_adapter.py",
+    "source_path": "train_COVID19/covid19_dataset_adapter.py",
+    "source_sha256": "a6031696e9a63888c385cfe735bc010e73f5bad5cdf80e1cb6ed264e812d4ba1",
+    "source_status": "current dependency copy",
+    "published_sha256": "aec8a52976fabe12d179ad08d356550f1d9325eb52910672b62d974420736a9c"
+  },
+  {
+    "published_file": "train_COVID19/covid19_volume_evaluator.py",
+    "source_path": "train_COVID19/covid19_volume_evaluator.py",
+    "source_sha256": "ff20153cdbbe9e164bbdbd2348f6799daf0180a5503291177a86a5f9034f560b",
+    "source_status": "current dependency copy",
+    "published_sha256": "ff20153cdbbe9e164bbdbd2348f6799daf0180a5503291177a86a5f9034f560b"
+  },
+  {
+    "published_file": "train_COVID19/covid19_official20_v2.py",
+    "source_path": "train_COVID19/covid19_official20_v2.py",
+    "source_sha256": "c48db1e1f4377dcbae4782a8adc48684b01f05569a03305d63ddb5d3702b1dd5",
+    "source_status": "current dependency copy",
+    "published_sha256": "93d9016b2583fe0e3567861001c1908afc9c5dcf6ec7c1374d0817608120d656"
+  },
+  {
+    "published_file": "tools/v22_0_acdc_test_frozen_checkpoint.py",
+    "source_path": "tools/v22_0_acdc_test_frozen_checkpoint.py",
+    "source_sha256": "5958b1a7514415f67beb184676c649867f6aeb15cce8d3ee5ee3fe5517a798f4",
+    "source_status": "current dependency copy",
+    "published_sha256": "5958b1a7514415f67beb184676c649867f6aeb15cce8d3ee5ee3fe5517a798f4"
+  },
+  {
+    "published_file": "train_promise12/networks/vision_transformer.py",
+    "source_path": "train_promise12/networks/vision_transformer.py",
+    "source_sha256": "e63100a23e8e05439fe6468a38ead97517ff5b2d6463868e1714a9628a65b635",
+    "source_status": "current dependency copy",
+    "published_sha256": "e63100a23e8e05439fe6468a38ead97517ff5b2d6463868e1714a9628a65b635"
+  },
+  {
+    "published_file": "train_promise12/networks/net_factory.py",
+    "source_path": "train_promise12/networks/net_factory.py",
+    "source_sha256": "55e996c8fc4a6214c2d3adf60f56f3607fb8e00e042ac56cfeb7c7753539e312",
+    "source_status": "current dependency copy",
+    "published_sha256": "55e996c8fc4a6214c2d3adf60f56f3607fb8e00e042ac56cfeb7c7753539e312"
+  },
+  {
+    "published_file": "train_promise12/networks/swin_transformer_unet_skip_expand_decoder_sys.py",
+    "source_path": "train_promise12/networks/swin_transformer_unet_skip_expand_decoder_sys.py",
+    "source_sha256": "343d28aade1ca8859d9dd25dd9d287c440598a09be88d5dc02ab2bfd3b0b20e5",
+    "source_status": "current dependency copy",
+    "published_sha256": "343d28aade1ca8859d9dd25dd9d287c440598a09be88d5dc02ab2bfd3b0b20e5"
+  },
+  {
+    "published_file": "train_promise12/networks/unet.py",
+    "source_path": "train_promise12/networks/unet.py",
+    "source_sha256": "d891eeb2dabbdcab3a1aa3c6f82118d996fe0695d1cdf9a00bb21140894cd1cc",
+    "source_status": "current dependency copy",
+    "published_sha256": "d891eeb2dabbdcab3a1aa3c6f82118d996fe0695d1cdf9a00bb21140894cd1cc"
+  },
+  {
+    "published_file": "train_promise12/networks/config.py",
+    "source_path": "train_promise12/networks/config.py",
+    "source_sha256": "8c2a53c006e62b3afce9937ffc8a7f63a694b4f1b9cb4bd9ce051ab88bf18b3a",
+    "source_status": "current dependency copy",
+    "published_sha256": "8c2a53c006e62b3afce9937ffc8a7f63a694b4f1b9cb4bd9ce051ab88bf18b3a"
+  },
+  {
+    "published_file": "train_promise12/dataloaders/utils.py",
+    "source_path": "train_promise12/dataloaders/utils.py",
+    "source_sha256": "9999b143d5dd36496a3424d76c405eefa990fbd7166f760dfbcd6dc960e98311",
+    "source_status": "current dependency copy",
+    "published_sha256": "9999b143d5dd36496a3424d76c405eefa990fbd7166f760dfbcd6dc960e98311"
+  },
+  {
+    "published_file": "train_promise12/dataloaders/promise12.py",
+    "source_path": "train_promise12/dataloaders/promise12.py",
+    "source_sha256": "8a732a3eafafee5f62c1ae951c2ea48c1ebcb64f2839d4b84cc2b3f22b64b3f6",
+    "source_status": "current dependency copy",
+    "published_sha256": "8a732a3eafafee5f62c1ae951c2ea48c1ebcb64f2839d4b84cc2b3f22b64b3f6"
+  },
+  {
+    "published_file": "train_promise12/dataloaders/dataset.py",
+    "source_path": "train_promise12/dataloaders/dataset.py",
+    "source_sha256": "12ca605d647de323b791df1c4550e199aaabcc78f5a341fcd3a624df3e031846",
+    "source_status": "current dependency copy",
+    "published_sha256": "12ca605d647de323b791df1c4550e199aaabcc78f5a341fcd3a624df3e031846"
+  },
+  {
+    "published_file": "train_promise12/utils/displacement.py",
+    "source_path": "train_promise12/utils/displacement.py",
+    "source_sha256": "7e807dfc8944ed0d683110e4077bb3d355021b5f7b77ab08c9b989176836ff96",
+    "source_status": "current dependency copy",
+    "published_sha256": "7e807dfc8944ed0d683110e4077bb3d355021b5f7b77ab08c9b989176836ff96"
+  },
+  {
+    "published_file": "train_promise12/utils/losses.py",
+    "source_path": "train_promise12/utils/losses.py",
+    "source_sha256": "06f3ef39004df0a70e116c783297ae2012ca7cd61de682fcdf964bbd32fcd480",
+    "source_status": "current dependency copy",
+    "published_sha256": "06f3ef39004df0a70e116c783297ae2012ca7cd61de682fcdf964bbd32fcd480"
+  },
+  {
+    "published_file": "train_promise12/utils/ramps.py",
+    "source_path": "train_promise12/utils/ramps.py",
+    "source_sha256": "272621382935891d236b5d951e3a3a7e6fe3f4d7913fd9eed4b7d47194322862",
+    "source_status": "current dependency copy",
+    "published_sha256": "272621382935891d236b5d951e3a3a7e6fe3f4d7913fd9eed4b7d47194322862"
+  },
+  {
+    "published_file": "train_promise12/val_2D.py",
+    "source_path": "train_promise12/val_2D.py",
+    "source_sha256": "826e6e5cdb89eee34f82998d365191077c0d4bf380aba06994b633216f9df345",
+    "source_status": "current dependency copy",
+    "published_sha256": "826e6e5cdb89eee34f82998d365191077c0d4bf380aba06994b633216f9df345"
+  },
+  {
+    "published_file": "train_promise12/configs/swin_tiny_patch4_window7_224_lite.yaml",
+    "source_path": "train_promise12/configs/swin_tiny_patch4_window7_224_lite.yaml",
+    "source_sha256": "62d340b748363a1150aedd0339843a2e1a526419bf3d426f42da73efdd9f3f26",
+    "source_status": "current dependency copy",
+    "published_sha256": "62d340b748363a1150aedd0339843a2e1a526419bf3d426f42da73efdd9f3f26"
+  },
+  {
+    "published_file": "train_promise12/train_promise12_bcp_fft.py",
+    "source_path": "experiments/three_innovation_ablation_transfer_v22_0/PROMISE20_FINAL3/self_train/train_promise12_bcp_fft.py",
+    "source_sha256": "e1006ebe9731d7665a886dc5f897f130c5818c132fa575cc16c9ea845cb27386",
+    "source_status": "archived shared Final3 trainer",
+    "published_sha256": "27baf9dd0c16f1998c149b9ef538031ba17c83353dc49cb50446c0071b6b4947"
+  },
+  {
+    "published_file": "tools/prepare_data.py",
+    "source_path": "train_MSCMRSEG/dataloaders/acdc_data_processing.py + train_promise12/dataloaders/promise12.py",
+    "source_status": "publication CLI; existing normalization and Promise converter retained; ACDC volume export added",
+    "published_sha256": "09539d0c434a647c91f5e384f0e872fa4b1a62e171376fc1e2e6c61a01c93d5f"
+  },
+  {
+    "published_file": "tools/evaluate_paper.py",
+    "source_path": "tools/v22_0_acdc_test_frozen_checkpoint.py + tools/v22_1_postfull_test_launcher.py",
+    "source_status": "publication CLI with existing inference and metric definitions",
+    "published_sha256": "9fa154a3275b6e952787fac4b0cc8a69393f7de9bcfdbb0191b6263a2176ded3"
+  },
+  {
+    "published_file": "tools/train_paper.py",
+    "source_path": "recorded Namespaces referenced in configs/paper/*.json",
+    "source_status": "publication launcher; existing trainers delegated without new training logic",
+    "published_sha256": "860c96124fe762a9af2a528e1761d3e0041bfc747c5149bd75006de122fc5c24"
+  }
+]

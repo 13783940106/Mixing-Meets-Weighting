@@ -216,23 +216,46 @@ class TwoStreamBatchSampler(Sampler):
         self.secondary_indices = secondary_indices
         self.secondary_batch_size = secondary_batch_size
         self.primary_batch_size = batch_size - secondary_batch_size
+        self._primary_perm = None
+        self._secondary_perm = None
+        self._primary_cursor = 0
+        self._secondary_cursor = 0
 
         assert len(self.primary_indices) >= self.primary_batch_size > 0
         assert len(self.secondary_indices) >= self.secondary_batch_size > 0
 
     def __iter__(self):
-        primary_iter = iterate_once(self.primary_indices)
-        secondary_iter = iterate_eternally(self.secondary_indices)
-        return (
-            primary_batch + secondary_batch
-            for (primary_batch, secondary_batch) in zip(
-            grouper(primary_iter, self.primary_batch_size),
-            grouper(secondary_iter, self.secondary_batch_size),
-        )
-        )
+        while True:
+            if self._primary_perm is None or self._primary_cursor + self.primary_batch_size > len(self._primary_perm):
+                self._primary_perm = np.random.permutation(self.primary_indices).tolist()
+                self._primary_cursor = 0
+            if self._secondary_perm is None or self._secondary_cursor + self.secondary_batch_size > len(self._secondary_perm):
+                self._secondary_perm = np.random.permutation(self.secondary_indices).tolist()
+                self._secondary_cursor = 0
+            primary_batch = self._primary_perm[self._primary_cursor:self._primary_cursor + self.primary_batch_size]
+            secondary_batch = self._secondary_perm[self._secondary_cursor:self._secondary_cursor + self.secondary_batch_size]
+            self._primary_cursor += self.primary_batch_size
+            self._secondary_cursor += self.secondary_batch_size
+            yield tuple(primary_batch) + tuple(secondary_batch)
+            if self._primary_cursor >= len(self._primary_perm):
+                break
 
     def __len__(self):
         return len(self.primary_indices) // self.primary_batch_size
+
+    def state_dict(self):
+        return {
+            "primary_perm": self._primary_perm,
+            "secondary_perm": self._secondary_perm,
+            "primary_cursor": self._primary_cursor,
+            "secondary_cursor": self._secondary_cursor,
+        }
+
+    def load_state_dict(self, state):
+        self._primary_perm = state["primary_perm"]
+        self._secondary_perm = state["secondary_perm"]
+        self._primary_cursor = int(state["primary_cursor"])
+        self._secondary_cursor = int(state["secondary_cursor"])
 
 
 def iterate_once(iterable):

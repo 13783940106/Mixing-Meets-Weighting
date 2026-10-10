@@ -70,6 +70,5 @@ def process_image_batches(image_batch_with_labels_tensor, image_batch_without_la
     new_batch_with_labels = torch.cat(new_batch_with_labels, dim=0)
     new_batch_without_labels = torch.cat(new_batch_without_labels, dim=0)
     last_image = torch.cat([new_batch_with_labels, new_batch_without_labels], dim=0)
-    return last_image.view(-1,224,224)
-
+    return last_image.reshape(-1, image_batch_with_labels_tensor.shape[-2], image_batch_with_labels_tensor.shape[-1])
 
