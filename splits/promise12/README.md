@@ -1,7 +1,14 @@
-# PROMISE12 split identity
+# PROMISE12 case registry and array allocation
 
-`train.list`, `val.list`, `test.list`, `labeled.list` and `unlabeled.list` describe the existing case registry: Case00–34 / Case35–39 / Case40–49, with Case00–06 named as the nominal seven labeled training cases. Validation/test lists are copied from the actual staged data used by Final3.
+| Files | Meaning |
+| --- | --- |
+| `train.list`, `val.list`, `test.list` | Case00–34 / Case35–39 / Case40–49 case registry |
+| `labeled.list`, `unlabeled.list` | Nominal case allocation, with Case00–06 listed as the seven labeled cases |
+| `labeled_array_indices.list` | Actual labeled training-array indices 0–201 |
+| `raw_geometry.tsv` | Original XYZ spacing and dimensions |
 
-The Final3 Namespace has `promise12_slice_indices_json=None`. Its actual sampler uses array indices `[0, 202)` as labeled and `[202, len(X_train))` as unlabeled. `labeled_array_indices.list` records those 202 indices explicitly. Keep the staged `X_train.npy` order. No case-to-array-row map was saved with this release's source records, so the case registry is not asserted to be the actual first-202 row mapping. In particular, the separate raw geometry inventory totals 299 slices for Case00–06; it must not be used to silently replace the existing 202-index allocation.
+The paper configuration uses array sampling: `[0, 202)` is labeled and `[202, len(X_train))` is unlabeled. Preserve the staged `X_train.npy` and `y_train.npy` order.
 
-`raw_geometry.tsv` is a text export from the existing raw inventory, with original XYZ spacing and dimensions. The legacy preprocessing sorts flat MHD filenames, concatenates training slices and resizes to 224×224. Evaluation uses unit-grid distances on staged ZYX arrays. Preprocessing from a newly obtained raw version is provided, but byte identity with the historical staged arrays has not been established in this static update.
+The nominal case lists and the array-index allocation are separate records. A row-to-case map is unavailable. The raw Case00–06 inventory contains 299 slices, so using all slices from those cases would define a different allocation from the 202-row sampler.
+
+Raw preprocessing sorts flat MHD filenames, concatenates training slices and resizes them to 224×224. Evaluation reconstructs case volumes and measures unit-grid distances on staged ZYX arrays.

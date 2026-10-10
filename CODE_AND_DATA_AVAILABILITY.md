@@ -1,31 +1,41 @@
 # Code and data availability
 
-## Repository access
+## Code
 
-The GitHub API reports [13783940106/Mixing-Meets-Weighting](https://github.com/13783940106/Mixing-Meets-Weighting) as **public**, default branch `main`, checked October 10, 2026. The former `beta-FFT-main-code` URL redirects to this repository. This update does not change visibility. Code, configurations, split manifests and preprocessing/evaluation instructions are provided. Raw/processed images, masks, initialization weights and trained checkpoints are not redistributed here.
+Source code, experiment configurations, split manifests, preprocessing scripts and evaluation instructions are available at [Mixing-Meets-Weighting](https://github.com/13783940106/Mixing-Meets-Weighting). Start with the [README](README.md) and the configurations in `configs/paper/`.
 
-## Original data and project preprocessing
+## Data sources
 
-| Dataset | Original provider / acquisition link | Project preprocessing and splits |
-| --- | --- | --- |
-| ACDC | [Official ACDC database](https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html), linking to the provider download portal | `tools/prepare_data.py --dataset acdc`; `splits/acdc/` |
-| PROMISE12 | [Official challenge download page](https://promise12.grand-challenge.org/Download/), directing users to [Zenodo DOI 10.5281/zenodo.8014041](https://zenodo.org/records/8014041) | `tools/prepare_data.py --dataset promise12`, using `train_promise12/dataloaders/promise12.py`; `splits/promise12/` |
-| COVID-19 | **COVID-19 CT Lung and Infection Segmentation Dataset**, [Zenodo DOI 10.5281/zenodo.3757476](https://zenodo.org/records/3757476), Jun Ma and collaborators; 20 annotated CT volumes | `train_COVID19/covid19_official20_v2.py`; `configs/paper/covid19_raw_patients.json`; `splits/covid19/` |
+Obtain the original datasets directly from their providers:
 
-COVID uses the 20-case record's CT volumes (`COVID-19-CT-Seg_20cases.zip`) and binary infection annotations (`Infection_Mask.zip`), including Coronacases and Radiopaedia cases. This is distinct from the 100-image medicalsegmentation.com dataset and other COVID collections. `COVID19_OFFICIAL20` is this project's derived data/protocol, not the provider's original data or benchmark split.
+| Dataset | Provider | Preparation entry | Split files |
+| --- | --- | --- | --- |
+| ACDC | [Official database](https://www.creatis.insa-lyon.fr/Challenge/acdc/databases.html) | `tools/prepare_data.py --dataset acdc` | `splits/acdc/` |
+| PROMISE12 | [Official download page](https://promise12.grand-challenge.org/Download/) and [Zenodo archive](https://zenodo.org/records/8014041) | `tools/prepare_data.py --dataset promise12` | `splits/promise12/` |
+| COVID-19 | [COVID-19 CT Lung and Infection Segmentation Dataset](https://zenodo.org/records/3757476) | `train_COVID19/covid19_official20_v2.py` | `splits/covid19/` |
 
-ACDC uses paired ED/ES NIfTI volumes, whole-volume min/max normalization, HDF5 volume/slice export and training augmentation resize to 256×256. Evaluation restores predictions to the saved grid. Existing lists retain 70/10/20 training/validation/test patients; the first 68/136 training slices define the nominal 5%/10% allocations. Physical geometry can be exported to `spacing.json`; paper distances use the saved grid without spacing. Normalization follows the existing ACDC processing source inherited from SSL4MIS; this release adds paths and volume export for the evaluator.
+COVID-19 uses the 20 annotated CT volumes in `COVID-19-CT-Seg_20cases.zip` and the infection labels in `Infection_Mask.zip`, including Coronacases and Radiopaedia cases. `COVID19_OFFICIAL20` names this repository's derived data layout and split protocol.
 
-PROMISE12 reads flat MHD/RAW pairs, resizes each slice to 224×224 with nearest-neighbor interpolation, normalizes each image slice by min/max and applies SimpleITK CurvatureFlow (time step 0.125, five iterations). Cases 00–34/35–39/40–49 form the existing training/validation/internal-test registry; challenge external test data are separate. The actual Final3 sampler labels array rows 0–201; remaining rows are unlabeled. The nominal Case00–06 registry and actual array indices are recorded separately in `splits/promise12/`, without inferring or changing their historical row mapping. Raw XYZ geometry is in `raw_geometry.tsv`; evaluation uses unit-grid distances on staged ZYX arrays. New raw preprocessing has not been verified as byte-identical to historical staging.
+Images, masks, initialization weights and trained checkpoints are obtained separately. The repository provides the preparation scripts and configuration files.
 
-COVID preprocessing canonicalizes to RAS, uses all axis-2 slices including negatives, clips image intensities at slice percentiles 0.5/99.5, normalizes to [0,1] and resizes to 256×256 (image interpolation order 1, mask order 0). This project uses 14/2/4 train/validation/test patients and 2415/490/615 slices. Split seed 42 and the existing per-patient allocation select 120/241 labeled slices for nominal 5%/10%. Training seed is 1337. Manifests retain dataset case/sample identifiers and original/canonical geometry; array files are excluded. The historical stored-spacing evaluator convention is preserved along with author-confirmed Full HD95 22.79/11.88 mm; no metrics were recomputed.
+## Preparation and evaluation protocol
 
-## Terms and attribution
+**ACDC.** Prepare paired ED/ES volumes, apply whole-volume min/max normalization and export HDF5 volumes and slices. Training resizes slices to 256×256; evaluation restores predictions to the saved volume grid. The split contains 70/10/20 training/validation/test patients. The 5%/10% allocations use the first 68/136 training slices. Paper distances use unit-grid coordinates; physical geometry can be exported to `spacing.json`.
 
-Obtain data from providers and comply with their terms and required citations. ACDC requests Bernard et al., *IEEE TMI* (2018), DOI 10.1109/TMI.2018.2837502. PROMISE12's [official details](https://promise12.grand-challenge.org/Details/) request the challenge-paper citation; its Zenodo archive includes `LICENSE.TXT` and identifies its license as other attribution terms (`other-at`). Follow that file rather than assuming a standard code license. COVID's Zenodo metadata lists CC BY 4.0 for this record. Code terms are separate: see [retained upstream notices and licenses](docs/THIRD_PARTY_NOTICES.md). This update assigns no blanket license.
+**PROMISE12.** Read flat MHD/RAW pairs, resize slices to 224×224 with nearest-neighbor interpolation, normalize each image slice by min/max and apply SimpleITK CurvatureFlow with time step 0.125 and five iterations. The case registry is Case00–34/35–39/40–49 for training/validation/internal testing. The array sampler labels rows 0–201 and treats the remaining rows as unlabeled. Keep the staged training-array order; see [case registry and array allocation](splits/promise12/README.md). Geometry metadata is in `raw_geometry.tsv`; evaluation uses unit-grid distances on staged ZYX arrays. Augmentation modes are described in the [README](README.md#promise12-augmentation-modes).
 
-Provider links/metadata were verified from official pages or provider Zenodo APIs on October 10, 2026. PROMISE12's official download page points to record 8014041; local historical archives use earlier filenames, so byte identity with the current provider archive is not claimed.
+**COVID-19.** Canonicalize volumes to RAS, retain all axis-2 slices, clip image intensities at slice percentiles 0.5/99.5, normalize to [0,1] and resize to 256×256 using image interpolation order 1 and mask order 0. The split contains 14/2/4 patients and 2415/490/615 slices. Split/subset seed 42 selects 120/241 labeled slices for 5%/10%; training uses seed 1337. Manifests record sample identifiers and original/canonical geometry. Distance evaluation uses the spacing stored with the derived grid, as specified in [evaluation metrics](docs/metrics.md).
 
-## Manuscript-ready statement
+## Terms and citations
 
-> The source code, experiment configurations, preprocessing scripts and split manifests are publicly available at https://github.com/13783940106/Mixing-Meets-Weighting. Original ACDC and PROMISE12 data are available from their official challenge providers, and the COVID-19 CT Lung and Infection Segmentation Dataset is available at https://doi.org/10.5281/zenodo.3757476. The repository documents project-specific preprocessing and evaluation conventions. Raw and preprocessed medical images and model weights are not redistributed in the repository and remain subject to the data providers' terms.
+Use each dataset according to its provider's terms and citation instructions:
+
+- ACDC: Bernard et al., *IEEE Transactions on Medical Imaging* (2018), DOI [10.1109/TMI.2018.2837502](https://doi.org/10.1109/TMI.2018.2837502).
+- PROMISE12: cite the challenge paper listed on the [official details page](https://promise12.grand-challenge.org/Details/) and follow the archive's `LICENSE.TXT`.
+- COVID-19: cite the provider's [Zenodo record](https://doi.org/10.5281/zenodo.3757476), distributed under CC BY 4.0.
+
+Code attribution and retained upstream licenses are listed in [third-party notices](docs/THIRD_PARTY_NOTICES.md).
+
+## Manuscript statement
+
+> Code and experiment configurations are available at https://github.com/13783940106/Mixing-Meets-Weighting. Data preparation instructions and links to the original ACDC, PROMISE12, and COVID-19 dataset providers are documented in the repository.

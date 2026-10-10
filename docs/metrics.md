@@ -1,15 +1,19 @@
-# Preserved evaluation conventions
+# Evaluation protocol
 
-Evaluation uses an explicitly supplied student-1 validation-selected checkpoint. No postprocessing, optimizer, backward pass or checkpoint selection is performed by `tools/evaluate_paper.py`.
+Evaluate the supplied student-1 validation-selected checkpoint with `tools/evaluate_paper.py`. Dice and IoU are reported as fractions in evaluation JSON and as percentages in the paper results table. Predictions are reconstructed into volumes before aggregation.
 
-| Setting | Reconstruction / aggregation | Distances and empty masks |
-| --- | --- | --- |
-| ACDC | Nearest-neighbor slice resize to 256×256 and prediction resize back to saved ZYX volumes; ordinary mean over cases and RV/MYO/LV | MedPy binary HD95 and directed prediction-to-GT ASD, without spacing. Both-empty: all metrics 0. One-empty: overlap 0, grid-diagonal distance penalty. |
-| PROMISE12 | Direct staged 224×224 slice inference; saved case volume reconstruction; ordinary mean over ten internal test cases, binary prostate | MedPy binary HD95 and directed prediction-to-GT ASD, without spacing. Both-empty: all metrics 0. One-empty: overlap 0, grid-diagonal distance penalty. |
-| COVID-19 | Stack XY slices along axis 2; ordinary patient-volume macro mean over four test patients; binary infection | Concatenated bidirectional surface distances: 95th percentile for HD95, mean for ASD. Stored canonical spacing on historical resized derived grid. Both-empty: Dice/IoU 1, distance 0. One-empty: overlap 0, distance array `[inf]`; ordinary mean retains nonfinite values. |
+| Dataset | Reconstruction and aggregation | Surface distances | Empty-mask convention |
+| --- | --- | --- | --- |
+| ACDC | Nearest-neighbor slice resize to 256×256, followed by prediction resize to saved ZYX volumes; equally average volumes and RV/MYO/LV | MedPy binary HD95 and directed prediction-to-GT ASD; unit grid | Both empty: all metrics 0. One empty: overlap 0 and grid-diagonal distance penalty. |
+| PROMISE12 | Direct 224×224 slice inference and case-volume reconstruction; equally average ten internal test cases for binary prostate segmentation | MedPy binary HD95 and directed prediction-to-GT ASD; unit grid | Both empty: all metrics 0. One empty: overlap 0 and grid-diagonal distance penalty. |
+| COVID-19 | Stack XY slices along axis 2; equally average four test patient volumes for binary infection segmentation | Concatenate bidirectional surface distances; HD95 is the 95th percentile and ASD the mean, in mm, using stored canonical spacing on the resized derived grid | Both empty: Dice/IoU 1 and distance 0. One empty: overlap 0 and infinite distance; arithmetic aggregation retains infinity. |
 
-ACDC delegates to `tools/v22_0_acdc_test_frozen_checkpoint.py::infer_case`, `safe_metrics`, `summarize`. PROMISE's binary metric function and inference loop come from the existing `tools/v22_1_postfull_test_launcher.py::promise_run`. COVID uses `train_COVID19/covid19_volume_evaluator.py` and the same existing prediction loop. Publication wrappers configure paths and commands.
+## Metric entries
 
-Training validation remains in existing trainers: ACDC averages foreground Dice across volumes/classes; PROMISE averages foreground case Dice; COVID selects patient-volume macro Dice. ACDC's historical log field `model*_mean_dice_test` reads validation in the published overlay and does not denote test-based selection.
+- ACDC: `tools/v22_0_acdc_test_frozen_checkpoint.py`, functions `infer_case`, `safe_metrics` and `summarize`.
+- PROMISE12: the binary metric function and case-inference loop in `tools/evaluate_paper.py`.
+- COVID-19: `train_COVID19/covid19_volume_evaluator.py` and the patient-inference loop in `tools/evaluate_paper.py`.
 
-Author-confirmed COVID Full HD95 is 22.79 mm (5%) and 11.88 mm (10%). Other spacing-only versions do not replace or rebind those results. Static packaging does not establish native-grid metric parity or regenerate results.
+## Checkpoint selection
+
+Training selects student 1 by validation Dice: volume/class mean for ACDC, case mean for PROMISE12 and patient-volume macro mean for COVID-19. Strict improvement retains the earliest iteration when scores tie. In the ACDC overlay, the log field `model*_mean_dice_test` refers to the validation loader.

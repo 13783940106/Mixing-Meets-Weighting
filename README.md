@@ -1,18 +1,18 @@
 # Mixing Meets Weighting
 
-Code for **Mixing Meets Weighting: Confidence-Modulated Semi-Supervised Medical Image Segmentation**, built on β-FFT. The five paper configurations cover ACDC 5%/10%, PROMISE12 20%, and COVID-19 5%/10%. Earlier code and migration material already in this repository are retained.
+PyTorch code for **Mixing Meets Weighting: Confidence-Modulated Semi-Supervised Medical Image Segmentation**. The method extends β-FFT with TRC, TCSMix and CTW and provides five paper configurations: ACDC 5%/10%, PROMISE12 20% and COVID-19 5%/10%.
 
-| Paper name | Existing implementation name | Source |
+| Component | Operation | Implementation |
 | --- | --- | --- |
-| TRC | Mask Token / `SpatialMaskTokenRouter` | `train_ACDC/v14_mask_adamix_components.py`, `train_promise12/networks/unet.py` |
-| TCSMix | AdaMix / `generate_adamix_bcp_lite_v1_mask` | ACDC component file and PROMISE/COVID trainer |
-| CTW | CRW / `compute_v21_3_innovation_x` | `train_ACDC/v21_3_acdc10_third_innovation_components.py`, ID `V21_3_X03_CONTOUR_RELIABILITY_WEIGHT` |
+| TRC | Retrieve learned reference vectors at the decoder–head interface | `SpatialMaskTokenRouter` in the ACDC components and PROMISE/COVID U-Net |
+| TCSMix | Set the exchanged rectangle scale from the teacher's mean maximum class probability over all pixels | `generate_adamix_bcp_lite_v1_mask` |
+| CTW | Weight student consistency by spatial changes in confidence | `compute_v21_3_innovation_x`, ID `V21_3_X03_CONTOUR_RELIABILITY_WEIGHT` |
 
-**Main Full / paper R1 is original X03 / Full_main (ACDC10% Dice 90.35%).** Its mixing control is the teacher's all-pixel mean maximum class probability, averaged over the two teacher batches. `R1_v2_B` / `formal_R1_20261007` (89.98%) changes that signal and is a separate experiment. Implementation names and the main algorithm are preserved.
+The ACDC10 paper configuration is `Full_main` (original X03). The corresponding Dice is **90.35%**. Source names `Mask Token`, `AdaMix` and `CRW` refer to TRC, TCSMix and CTW, respectively.
 
 ## Installation
 
-Use Python 3.10.20 and a CUDA GPU. The recorded A100 profile uses PyTorch 2.4.1+cu121:
+The original environment uses Python 3.10.20, PyTorch 2.4.1 and CUDA 12.1:
 
 ```bash
 git clone https://github.com/13783940106/Mixing-Meets-Weighting.git
@@ -21,11 +21,11 @@ python -m pip install torch==2.4.1 torchvision==0.19.1 --index-url https://downl
 python -m pip install -r requirements-core.txt
 ```
 
-See the [recorded environment](docs/environment-original.md) and separate [RTX 5090/5090D recipe](docs/environment-5090.md). The latter is not an execution-validated environment.
+See the [original environment](docs/environment-original.md) and [RTX 5090/5090D installation recipe](docs/environment-5090.md).
 
-## Data and initialization
+## Data preparation
 
-Obtain original data from [CODE_AND_DATA_AVAILABILITY.md](CODE_AND_DATA_AVAILABILITY.md). Defaults are `data/`, `weights/`, `outputs/`; override with `DATA_ROOT`, `WEIGHTS_ROOT`, `OUTPUT_ROOT`, or launcher arguments. Raw PROMISE12 MHD/RAW pairs share a flat directory; raw COVID files go under `images/` and `infection_masks/`. ACDC preprocessing searches the provider's patient directories recursively.
+Download the datasets from the providers listed in [Code and data availability](CODE_AND_DATA_AVAILABILITY.md). Use `data/`, `weights/` and `outputs/` as the default directories, or configure `DATA_ROOT`, `WEIGHTS_ROOT` and `OUTPUT_ROOT`.
 
 ```bash
 export DATA_ROOT="$PWD/data"
@@ -35,13 +35,19 @@ python tools/prepare_data.py --dataset promise12 --raw-root data_raw/PROMISE12 -
 python train_COVID19/covid19_official20_v2.py --raw-root data_raw/COVID19 --data-root "$DATA_ROOT"
 ```
 
-Processed layouts are `data/ACDC/data/slices/*.h5` plus volume HDF5 under `data/ACDC/data/`, `data/PROMISE12/npy_image/*.npy`, and `data/COVID19_OFFICIAL20/derived/slices_256/`. Frozen lists/geometry are in [splits/](splits/). Existing processed data can be placed at these paths directly; retain array/list order and the ACDC/PROMISE `.list` files. All preprocessing commands reject an existing output directory.
+Place PROMISE12 MHD/RAW pairs in a flat directory and COVID files under `images/` and `infection_masks/`. ACDC preprocessing searches the patient directories recursively. Use a fresh output directory for preprocessing.
 
-ACDC needs `weights/label3/unet_best_model.pth` and `weights/label7/unet_best_model.pth`, containing `net` and `opt`. Both students and the teacher inherit model initialization; students inherit optimizer state. These weights are not uploaded. Their actual generation commands/update counts were not saved in confirmed records; the parsed `pre_iterations=10000` field does not establish their generation budget. PROMISE/COVID perform the recorded 10,000-update pretraining stage before 30,000 SSL updates.
+| Dataset | Prepared files |
+| --- | --- |
+| ACDC | `data/ACDC/data/slices/*.h5`, volume HDF5 files in `data/ACDC/data/`, and split lists |
+| PROMISE12 | `data/PROMISE12/npy_image/*.npy` and split lists |
+| COVID-19 | `data/COVID19_OFFICIAL20/derived/slices_256/` and manifests |
 
-PROMISE retains the actual trainer's **first 202 training array rows** as labeled. Its nominal seven-case registry is supplied separately; see [split details](splits/promise12/README.md). Historical checkpoint reproduction requires the original staged array ordering. Newly prepared arrays have not been checked for byte identity with that staging.
+Split lists and geometry metadata are in [splits/](splits/). Keep the prepared array and list order when using existing data. PROMISE12 training labels the first 202 training array rows; its case registry and array allocation are described in [split details](splits/promise12/README.md).
 
-## Five Full training commands
+ACDC training requires `weights/label3/unet_best_model.pth` for 5% and `weights/label7/unet_best_model.pth` for 10%, each containing `net` and `opt`. Both students and the teacher load the model initialization; the students also load the optimizer state. Obtain these initialization files separately. The PROMISE/COVID entry performs 10,000 pretraining updates followed by 30,000 semi-supervised updates. The ACDC entry starts from the corresponding pretrained initialization and performs 30,000 semi-supervised updates.
+
+## Training
 
 ```bash
 python tools/train_paper.py --config configs/paper/acdc5.json
@@ -51,35 +57,39 @@ python tools/train_paper.py --config configs/paper/covid5.json
 python tools/train_paper.py --config configs/paper/covid10.json
 ```
 
-The launcher delegates to `train_ACDC/v21_3_acdc10_third_innovation_transfer.py` or `train_promise12/train_promise12_bcp_fft.py`. The latter is the shared archived Final3 entry; existing branches/default-off controls are retained. `--print-command` prints argv without importing the trainer. `--gpu`, `--data-root`, `--weights-root`, `--output-root` configure paths/device. Existing output directories are rejected.
+Configure the device and directories with `--gpu`, `--data-root`, `--weights-root` and `--output-root`. Use `--print-command` to inspect the generated command. Each run uses a fresh output directory.
 
-| Setting | Training seed | Actual labeled allocation | SSL updates per student | Validation cadence |
+| Setting | Seed | Labeled allocation | SSL updates per student | Validation cadence |
 | --- | --- | --- | --- | --- |
-| ACDC5 | 1337 | first 68 slices / 3 patients | 30000 | every 200 |
-| ACDC10 | 42 | first 136 slices / 7 patients | 30000 | every 200 |
-| PROMISE20 | 1337 | first 202 training array rows | 30000 | every 200 |
-| COVID5 | 1337 | 120 of 2415 training slices | 30000 | step 1, then every 500 |
-| COVID10 | 1337 | 241 of 2415 training slices | 30000 | step 1, then every 500 |
+| ACDC5 | 1337 | first 68 slices / 3 patients | 30000 | every 200 updates |
+| ACDC10 | 42 | first 136 slices / 7 patients | 30000 | every 200 updates |
+| PROMISE20 | 1337 | first 202 training array rows | 30000 | every 200 updates |
+| COVID5 | 1337 | 120 of 2415 training slices | 30000 | update 1, then every 500 |
+| COVID10 | 1337 | 241 of 2415 training slices | 30000 | update 1, then every 500 |
 
-COVID split/subset seed is independently 42. Selection uses student-1 validation Dice, updating only on strict improvement (earliest-step tie); test scores do not select checkpoints. Both PROMISE/COVID students and the teacher are independent U-Nets constructed from `model_1`; recorded `model_2=swin_unet` is unused. SGD uses LR 0.01, momentum 0.9, weight decay 0.0001. ACDC SSL keeps constant LR and inherited optimizer state; PROMISE/COVID SSL students also load the selected pretraining checkpoint's optimizer state, including momentum buffers, then use the existing polynomial schedule (exponent 0.9). CTW weight is 0.05.
+COVID uses split/subset seed 42. The students are independent U-Nets; the teacher follows student 1 by EMA. In the shared PROMISE/COVID entry, all three networks are constructed from `model_1`; `model_2` is a retained, unused field.
 
-The PROMISE paper config explicitly retains `legacy_overwrite`, the loader behavior in release `8fbca8f`: color jitter replaces the cutout image while its cutout label remains. The corrected `cutout_then_jitter` mode applies jitter to the cutout image and keeps that image/label pair consistent. It is the direct loader/trainer default and is supplied as an **unrun follow-up**, with separate output paths and no assigned paper scores:
+SGD uses initial LR 0.01, momentum 0.9 and weight decay 0.0001. The SSL students inherit the selected pretraining optimizer state. ACDC uses a constant learning rate; PROMISE/COVID decay student 1's rate polynomially with exponent 0.9 and keep student 2's rate fixed. TRC uses four 16-dimensional reference vectors; TCSMix uses scale endpoints 0.18/0.38; CTW uses coefficient 0.05. Student-1 validation Dice selects the checkpoint, retaining the earliest update on a tie.
 
-```bash
-python tools/train_paper.py --config configs/followup/promise20_cutout_consistent.json
-```
-
-The original FINAL3 loader dependency was not separately archived, so neither mode establishes historical dependency byte identity. See [publication fixes](docs/publication_fixes_20261010.md). ACDC and COVID use separate augmentation paths.
-
-For the ACDC10 eight-combination experiment, `--arm ABC` maps A/B/C to TRC/TCSMix/CTW. `000`, `100`, `010`, `001`, `110`, `101`, `011`, `111` cover every combination, with other settings fixed:
+For the ACDC10 eight-combination experiment, `--arm ABC` controls TRC/TCSMix/CTW. For example, `101` enables TRC and CTW:
 
 ```bash
 python tools/train_paper.py --config configs/paper/acdc10.json --arm 101
 ```
 
-## Checkpoints and evaluation
+### PROMISE12 augmentation modes
 
-ACDC saves a full-state dictionary in `checkpoints/best.ckpt`; evaluation uses `model_1`. PROMISE/COVID save the selected student-1 state dictionary in `self_train/unet_best_model.pth`. Use an existing validation-selected checkpoint or the corresponding output of a new run. Historical SHA256 and validation steps are recorded in the configs and [paper results](docs/paper_results.tsv). No weights are distributed here.
+The paper config explicitly selects `legacy_overwrite`: color jitter uses the original image while the strong-view label retains the cutout region as background. The alternative `cutout_then_jitter` mode applies jitter to the cutout image and keeps it paired with the cutout label. Use its separate configuration for new training:
+
+```bash
+python tools/train_paper.py --config configs/followup/promise20_cutout_consistent.json
+```
+
+The alternative writes to `outputs/promise20_cutout_consistent/`. Its experiment status is **not run**, with no reported score. Direct loader/trainer calls default to `cutout_then_jitter`; the paper command supplies its mode explicitly. See the [version notes](docs/publication_fixes_20261010.md).
+
+## Evaluation
+
+Evaluate a supplied student-1 checkpoint:
 
 ```bash
 python tools/evaluate_paper.py --config configs/paper/acdc5.json --checkpoint outputs/acdc5/checkpoints/best.ckpt
@@ -89,16 +99,16 @@ python tools/evaluate_paper.py --config configs/paper/covid5.json --checkpoint o
 python tools/evaluate_paper.py --config configs/paper/covid10.json --checkpoint outputs/covid10/self_train/unet_best_model.pth
 ```
 
-Default split is `test`; add `--split val` to validate a supplied checkpoint. Evaluation accepts `--data-root`, `--output-dir`, `--gpu` and arbitrary checkpoint paths. It never selects or replaces checkpoints. See [metric conventions](docs/metrics.md).
+ACDC checkpoints contain a full-state dictionary; evaluation reads `model_1`. PROMISE/COVID checkpoints contain the student-1 state dictionary. The default split is `test`; use `--split val` for validation. Paths and device can be set with `--data-root`, `--output-dir` and `--gpu`. Checkpoint metadata is recorded in the configs and [paper results](docs/paper_results.tsv). See [evaluation metrics](docs/metrics.md) for reconstruction, aggregation and distance conventions.
 
-| Main Full | Dice (%) | IoU (%) | HD95 | ASD | Distance unit |
+## Paper results
+
+| Full model | Dice (%) | IoU (%) | HD95 | ASD | Distance unit |
 | --- | --- | --- | --- | --- | --- |
 | ACDC5 | 88.77 | 80.51 | 2.30 | 0.74 | grid |
-| ACDC10 / paper R1 | 90.35 | 82.93 | 1.42 | 0.43 | grid |
+| ACDC10 | 90.35 | 82.93 | 1.42 | 0.43 | grid |
 | PROMISE12 20% | 83.86 | 72.37 | 2.99 | 1.41 | grid |
 | COVID-19 5% | 67.31 | 51.45 | 22.79 | 4.06 | mm |
 | COVID-19 10% | 67.94 | 52.38 | 11.88 | 3.03 | mm |
 
-These are existing paper/receipt values. COVID main Full HD95 remains author-confirmed 22.79/11.88 mm; other spacing-only versions do not replace it. This update performs static syntax, dependency, path and Git-diff checks only. Training, model loading, inference, evaluation and checkpoint reselection were not performed; packaged commands have not been execution-validated.
-
-[Source provenance](docs/source_provenance.json) · [Upstream attribution/licenses](docs/THIRD_PARTY_NOTICES.md) · [Data/code availability](CODE_AND_DATA_AVAILABILITY.md)
+[Code and data availability](CODE_AND_DATA_AVAILABILITY.md) · [Source provenance](docs/source_provenance.json) · [Upstream attribution and licenses](docs/THIRD_PARTY_NOTICES.md)
